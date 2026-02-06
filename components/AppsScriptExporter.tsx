@@ -1,19 +1,18 @@
 
 import React, { useState } from 'react';
-/* Added Database to imports from lucide-react */
 import { Copy, FileCode, CheckCircle, Zap, ExternalLink, HelpCircle, Terminal, Database } from 'lucide-react';
 
 const AppsScriptExporter: React.FC = () => {
   const [copied, setCopied] = useState(false);
 
   const scriptCode = `/**
- * EDUSTREAM PRO - CLOUD SYNC ENGINE v2.0
- * Paste this in Google Sheets > Extensions > Apps Script
+ * EDUSTREAM PRO - ADVANCED CLOUD SYNC ENGINE v3.0
+ * Supports: Detailed Fee Breakdown, Fines, and Attendance Logs.
  */
 
 const DB_SCHEMA = {
   STUDENT_ADMISSION_MASTER: ['Student_ID', 'Admission_No', 'First_Name', 'Last_Name', 'Class', 'Status', 'Admission_Date', 'Father_Name', 'Father_Mobile'],
-  FEE_TRANSACTIONS: ['TXN_ID', 'Date', 'Student_Name', 'Class', 'Month', 'Amount', 'Mode', 'Collected_By'],
+  FEE_TRANSACTIONS: ['TXN_ID', 'Date', 'Student_Name', 'Class', 'Month', 'Fee_Type', 'Base_Amount', 'Fine_Amount', 'Total_Amount', 'Fine_Reason', 'Mode', 'Collected_By'],
   STAFF_MASTER: ['Staff_ID', 'Full_Name', 'Role', 'Email', 'Mobile', 'Salary', 'Joining_Date'],
   ATTENDANCE_LOG: ['Date', 'Class', 'Student_ID', 'Status', 'Marked_By']
 };
@@ -42,9 +41,9 @@ function doPost(e) {
       s.id, s.admissionNo, s.firstName, s.lastName, s.admissionClass, s.status, s.admissionDate, s.fatherName, s.fatherMobile
     ]);
 
-    // Sync Fees
+    // Sync Fees (Advanced breakdown)
     if (payload.fees) syncEntity('FEE_TRANSACTIONS', payload.fees, (f) => [
-      f.id, f.date, f.studentName, f.class, f.month, f.amount, f.mode, f.collectedBy
+      f.id, f.date, f.studentName, f.class, f.month, f.feeType, f.baseAmount, f.fineAmount, f.totalAmount, f.fineReason, f.mode, f.collectedBy
     ]);
 
     // Sync Staff
@@ -57,17 +56,17 @@ function doPost(e) {
       a.date, a.classSection, a.studentId, a.status, a.markedBy
     ]);
 
-    return ContentService.createTextOutput(JSON.stringify({status: 'success', message: 'Data Synced Successfully'})).setMimeType(ContentService.MimeType.JSON);
+    return ContentService.createTextOutput(JSON.stringify({status: 'success', message: 'Advanced Data Synced Successfully'})).setMimeType(ContentService.MimeType.JSON);
   } catch (err) {
     return ContentService.createTextOutput(JSON.stringify({status: 'error', message: err.toString()})).setMimeType(ContentService.MimeType.JSON);
   }
 }
 
 /**
- * SIMPLE VERIFICATION (GET)
+ * VERIFICATION (GET)
  */
 function doGet() {
-  return ContentService.createTextOutput("EduStream Cloud Sync is ACTIVE! Please use POST method to sync data.").setMimeType(ContentService.MimeType.TEXT);
+  return ContentService.createTextOutput("EduStream Cloud Sync v3.0 ACTIVE!").setMimeType(ContentService.MimeType.TEXT);
 }
 
 function syncEntity(sheetName, dataArray, mapFn) {
@@ -87,8 +86,9 @@ function syncEntity(sheetName, dataArray, mapFn) {
   }
   
   // Formatting
-  sheet.getRange(1, 1, 1, DB_SCHEMA[sheetName].length).setBackground('#1e293b').setFontColor('#ffffff').setFontWeight('bold');
+  sheet.getRange(1, 1, 1, DB_SCHEMA[sheetName].length).setBackground('#1e293b').setFontColor('#ffffff').setFontWeight('bold').setHorizontalAlignment('center');
   sheet.setFrozenRows(1);
+  sheet.autoResizeColumns(1, DB_SCHEMA[sheetName].length);
 }
 
 function setupFullSystem() {
@@ -97,11 +97,11 @@ function setupFullSystem() {
     if (!ss.getSheetByName(name)) ss.insertSheet(name);
     syncEntity(name, [], () => []);
   });
-  SpreadsheetApp.getUi().alert('✅ School ERP Database Initialized! Sheets created for Students, Fees, Staff, and Attendance.');
+  SpreadsheetApp.getUi().alert('✅ Advanced School Database Initialized!');
 }
 
 function checkConnection() {
-  SpreadsheetApp.getUi().alert('📡 Connection Status: ONLINE\\nServer is ready to receive data.');
+  SpreadsheetApp.getUi().alert('📡 Server Status: ONLINE\\nVersion: 3.0 (Advanced)');
 }
 `;
 
@@ -119,8 +119,8 @@ function checkConnection() {
             <Database size={32} />
           </div>
           <div>
-            <h2 className="text-3xl font-black text-slate-900 tracking-tight">Cloud Connect Tool</h2>
-            <p className="text-slate-500 font-medium">Link this app to your Google Sheets in <span className="text-indigo-600 font-bold">3 minutes</span>.</p>
+            <h2 className="text-3xl font-black text-slate-900 tracking-tight">Advanced Cloud Engine</h2>
+            <p className="text-slate-500 font-medium">Supporting <span className="text-indigo-600 font-bold">Itemized Fees & Fines</span>.</p>
           </div>
         </div>
         <div className="flex gap-4">
@@ -129,16 +129,16 @@ function checkConnection() {
             target="_blank" 
             className="px-6 py-3.5 bg-slate-100 text-slate-700 rounded-2xl font-black text-xs uppercase tracking-widest flex items-center gap-2 hover:bg-slate-200 transition-all shadow-sm"
            >
-             <ExternalLink size={16} /> 1. Create New Sheet
+             <ExternalLink size={16} /> Update Sheet
            </a>
            <button 
             onClick={handleCopy}
             className={`px-8 py-3.5 rounded-2xl font-black text-xs uppercase tracking-widest flex items-center gap-2 transition-all shadow-xl ${
-              copied ? 'bg-emerald-500 text-white' : 'bg-indigo-600 text-white hover:bg-indigo-700 hover:-translate-y-1'
+              copied ? 'bg-emerald-500 text-white' : 'bg-indigo-600 text-white hover:bg-indigo-700'
             }`}
            >
             {copied ? <CheckCircle size={18} /> : <FileCode size={18} />}
-            {copied ? 'Script Copied!' : '2. Copy Apps Script'}
+            {copied ? 'Copied!' : 'Copy Advanced Script'}
            </button>
         </div>
       </div>
@@ -149,46 +149,27 @@ function checkConnection() {
              <div className="absolute top-0 right-0 p-10 opacity-10">
                <HelpCircle size={120} />
              </div>
-             <h3 className="text-xl font-black mb-6 flex items-center gap-2">
+             <h3 className="text-xl font-black mb-6 flex items-center gap-2 text-indigo-200">
                 <Zap size={20} className="text-amber-400" />
-                Quick Steps
+                Next Step
              </h3>
+             <p className="text-sm font-medium leading-relaxed mb-6 opacity-80">
+               चूंकि आपने पहले से ही पुरानी स्क्रिप्ट डाली हुई है, कृपया उसे **हटाकर** इस नई **Advanced Script** को पेस्ट करें और दोबारा **Deploy** करें।
+             </p>
              <ul className="space-y-6 relative z-10">
                 <li className="flex gap-4">
                   <span className="w-8 h-8 rounded-full bg-indigo-500 flex items-center justify-center text-xs font-black shrink-0 border border-indigo-400">1</span>
                   <p className="text-sm font-medium leading-relaxed">
-                    ऊपर वाले बटन से <span className="font-black text-white underline">New Sheet</span> खोलें।
+                    Apps Script में पुराना कोड मिटाकर यह नया कोड डालें।
                   </p>
                 </li>
                 <li className="flex gap-4">
                   <span className="w-8 h-8 rounded-full bg-indigo-500 flex items-center justify-center text-xs font-black shrink-0 border border-indigo-400">2</span>
                   <p className="text-sm font-medium leading-relaxed">
-                    <span className="font-black text-white">Extensions &gt; Apps Script</span> में कोड पेस्ट करें और <span className="font-black text-white">Save</span> करें।
-                  </p>
-                </li>
-                <li className="flex gap-4">
-                  <span className="w-8 h-8 rounded-full bg-indigo-500 flex items-center justify-center text-xs font-black shrink-0 border border-indigo-400">3</span>
-                  <p className="text-sm font-medium leading-relaxed">
-                    <span className="font-black text-white">Deploy &gt; New Deployment</span> करें और <span className="font-black text-white">Web App</span> चुनें।
-                  </p>
-                </li>
-                <li className="flex gap-4">
-                  <span className="w-8 h-8 rounded-full bg-indigo-500 flex items-center justify-center text-xs font-black shrink-0 border border-indigo-400">4</span>
-                  <p className="text-sm font-medium leading-relaxed">
-                    URL को कॉपी करके <span className="font-black text-white underline italic">System Settings</span> पेज में डाल दें।
+                    <span className="font-black text-white">Deploy &gt; Manage Deployments</span> में जाकर पुराने वाले को **Edit** करके **New Version** चुनें।
                   </p>
                 </li>
              </ul>
-          </div>
-
-          <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm">
-             <h4 className="font-black text-slate-800 mb-4 flex items-center gap-2 uppercase tracking-widest text-xs">
-               <Terminal size={14} className="text-indigo-600" />
-               Auto-Sync Ready
-             </h4>
-             <p className="text-xs text-slate-500 font-medium leading-relaxed">
-               एक बार लिंक होने के बाद, आप Dashboard से "Sync Now" बटन दबाकर सारा डेटा अपनी Sheet में भेज सकते हैं।
-             </p>
           </div>
         </div>
 
@@ -201,7 +182,7 @@ function checkConnection() {
                   <div className="w-3 h-3 rounded-full bg-emerald-500"></div>
                 </div>
                 <div className="px-4 py-1 bg-slate-800 rounded-full text-[9px] font-black text-slate-400 uppercase tracking-widest">
-                  GoogleSyncEngine.js
+                  GoogleSync_v3.gs
                 </div>
              </div>
              <div className="p-10 overflow-auto custom-scrollbar font-mono text-[10px] leading-relaxed text-indigo-200/80 bg-slate-950 h-[500px]">

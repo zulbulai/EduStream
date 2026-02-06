@@ -68,7 +68,11 @@ export interface FeeTransaction {
   studentName: string;
   class: string;
   month: string;
-  amount: number;
+  feeType: 'Tuition Fee' | 'Admission Fee' | 'Exam Fee' | 'Transport Fee' | 'Library Fee' | 'Uniform Fee' | 'Other';
+  baseAmount: number;
+  fineAmount: number;
+  totalAmount: number;
+  fineReason?: string;
   mode: 'Cash' | 'UPI' | 'Cheque' | 'Bank Transfer';
   status: 'Pending' | 'Verified';
   collectedBy: string;

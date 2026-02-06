@@ -14,7 +14,8 @@ const Dashboard: React.FC = () => {
     const today = new Date().toISOString().split('T')[0];
     const todayAttendance = attendance.filter(a => a.date === today);
     const presentCount = todayAttendance.filter(a => a.status === 'P').length;
-    const totalFee = fees.reduce((sum, f) => sum + f.amount, 0);
+    // Fix: Using totalAmount instead of non-existent amount property
+    const totalFee = fees.reduce((sum, f) => sum + f.totalAmount, 0);
 
     return [
       { 
@@ -52,7 +53,8 @@ const Dashboard: React.FC = () => {
   const feeChartData = useMemo(() => {
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
     return months.map(m => {
-      const amount = fees.filter(f => f.month.includes(m)).reduce((s, f) => s + f.amount, 0);
+      // Fix: Using totalAmount instead of non-existent amount property
+      const amount = fees.filter(f => f.month.includes(m)).reduce((s, f) => s + f.totalAmount, 0);
       return { month: m, amount: amount / 1000 };
     });
   }, [fees]);
