@@ -27,7 +27,7 @@ export const StorageService = {
       students.push(student);
     }
     StorageService.setItem(KEYS.STUDENTS, students);
-    // Auto sync if URL is present (background)
+    // Explicitly wait for background sync or just fire it
     StorageService.backgroundSync();
   },
   deleteStudent: (id: string) => {
@@ -87,7 +87,10 @@ export const StorageService = {
   getCurrentUser: (): User | null => JSON.parse(localStorage.getItem(KEYS.AUTH) || 'null'),
   setCurrentUser: (user: User | null) => localStorage.setItem(KEYS.AUTH, JSON.stringify(user)),
 
-  // Cloud Sync Logic
+  /**
+   * Cloud Sync Engine v7.0
+   * Uses plain text POST to bypass CORS pre-flight while delivering JSON.
+   */
   backgroundSync: async () => {
     const config = StorageService.getConfig();
     if (!config.appsScriptUrl) return;
@@ -100,13 +103,17 @@ export const StorageService = {
     };
 
     try {
+      // We send it as a simple POST to avoid pre-flight CORS issues
       await fetch(config.appsScriptUrl, {
         method: 'POST',
-        mode: 'no-cors',
+        headers: {
+          'Content-Type': 'text/plain;charset=utf-8',
+        },
         body: JSON.stringify(data)
       });
+      console.log("Cloud Push Successful");
     } catch (e) {
-      console.warn("Background sync failed", e);
+      console.warn("Cloud Push Failed", e);
     }
   },
 
@@ -114,17 +121,24 @@ export const StorageService = {
     const config = StorageService.getConfig();
     if (!config.appsScriptUrl) throw new Error("Cloud URL missing");
 
-    const response = await fetch(config.appsScriptUrl);
-    const result = await response.json();
+    try {
+      const response = await fetch(config.appsScriptUrl);
+      if (!response.ok) throw new Error("Network error");
+      
+      const result = await response.json();
 
-    if (result.status === 'success' && result.data) {
-      const { students, fees, staff, attendance } = result.data;
-      if (students) StorageService.setItem(KEYS.STUDENTS, students);
-      if (fees) StorageService.setItem(KEYS.FEES, fees);
-      if (staff) StorageService.setItem(KEYS.STAFF, staff);
-      if (attendance) StorageService.setItem(KEYS.ATTENDANCE, attendance);
-      return true;
+      if (result.status === 'success' && result.data) {
+        const { studentmaster, feeledger, staffdirectory, attendancelogs } = result.data;
+        if (studentmaster) StorageService.setItem(KEYS.STUDENTS, studentmaster);
+        if (feeledger) StorageService.setItem(KEYS.FEES, feeledger);
+        if (staffdirectory) StorageService.setItem(KEYS.STAFF, staffdirectory);
+        if (attendancelogs) StorageService.setItem(KEYS.ATTENDANCE, attendancelogs);
+        return true;
+      }
+      return false;
+    } catch (err) {
+      console.error("Cloud Pull Error:", err);
+      throw err;
     }
-    return false;
   }
 };
