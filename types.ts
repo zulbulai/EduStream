@@ -26,24 +26,38 @@ export interface Student {
   age: number;
   religion: string;
   category: string;
-  aadharNo: string;
-  sssmId: string;
   bloodGroup: string;
   motherTongue: string;
   email?: string;
   mobile?: string;
+  
+  // Family
   fatherName: string;
   fatherOccupation: string;
   fatherMobile: string;
   motherName: string;
   motherMobile?: string;
+  
+  // Academic
   admissionClass: string;
+  section?: string;
+  rollNo?: string;
   stream?: string;
+  subjects: string[];
+  previousSchool?: string;
+  previousGrade?: string;
+  
+  // Address & Emergency
+  address: string;
+  city: string;
+  state: string;
+  pinCode: string;
+  emergencyContactName: string;
+  emergencyContactMobile: string;
+  
   transportRequired: boolean;
   busRoute?: string;
   status: 'Active' | 'Alumni' | 'Suspended';
-  rollNo?: string;
-  section?: string;
   photo?: string;
   documents: {
     type: string;
@@ -84,7 +98,7 @@ export interface Staff {
   role: UserRole;
   email: string;
   mobile: string;
-  assignedClass?: string; // This marks them as the Class Teacher
+  assignedClass?: string; 
   salary: number;
   joiningDate: string;
   qualification: string;
@@ -94,7 +108,7 @@ export interface TimeSlot {
   id: string;
   classId: string;
   day: 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday';
-  periodNumber: number; // 1, 2, 3...
+  periodNumber: number; 
   subject: string;
   teacherId: string;
   startTime: string;
