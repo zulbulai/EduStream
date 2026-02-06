@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { School, ShieldCheck, Lock, User as UserIcon, Loader2 } from 'lucide-react';
+import { School, Lock, User as UserIcon, Loader2, Phone, Mail, ShieldCheck } from 'lucide-react';
 import { UserRole, User } from '../types';
 import { StorageService } from '../services/storage';
 
@@ -19,30 +19,36 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
     setLoading(true);
     setError('');
 
-    // Demo Auth logic
+    // Fetch latest data to verify users from cloud if possible
     setTimeout(() => {
+      const students = StorageService.getStudents();
+      const staff = StorageService.getStaff();
+
+      // 1. Admin Logic (Fixed)
       if (username === 'admin' && password === 'admin') {
-        const user: User = {
-          id: 'admin-01',
-          username: 'admin',
-          role: UserRole.ADMIN,
-          name: 'Super Admin'
-        };
+        const user: User = { id: 'admin-01', username: 'admin', role: UserRole.ADMIN, name: 'Super Admin' };
         StorageService.setCurrentUser(user);
-        onLogin(user);
-      } else if (username === 'teacher' && password === 'teacher') {
-        const user: User = {
-          id: 'teacher-01',
-          username: 'teacher',
-          role: UserRole.TEACHER,
-          name: 'Kavita Singh'
-        };
-        StorageService.setCurrentUser(user);
-        onLogin(user);
-      } else {
-        setError('Invalid username or password. (Hint: admin/admin)');
-        setLoading(false);
+        return onLogin(user);
       }
+
+      // 2. Teacher Login (Email or Mobile)
+      const foundTeacher = staff.find(s => (s.email === username || s.mobile === username) && password === 'teacher');
+      if (foundTeacher) {
+        const user: User = { id: foundTeacher.id, username: username, role: UserRole.TEACHER, name: foundTeacher.name, linkedId: foundTeacher.id };
+        StorageService.setCurrentUser(user);
+        return onLogin(user);
+      }
+
+      // 3. Student Login (Email or Mobile or Admission No)
+      const foundStudent = students.find(s => (s.email === username || s.mobile === username || s.admissionNo === username) && password === 'student');
+      if (foundStudent) {
+        const user: User = { id: foundStudent.id, username: username, role: UserRole.STUDENT, name: foundStudent.firstName, linkedId: foundStudent.id };
+        StorageService.setCurrentUser(user);
+        return onLogin(user);
+      }
+
+      setError('Authentication failed. Check credentials.');
+      setLoading(false);
     }, 1000);
   };
 
@@ -53,40 +59,40 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
         <div className="absolute bottom-0 right-0 w-96 h-96 bg-emerald-500 rounded-full mix-blend-multiply filter blur-3xl animate-blob animation-delay-2000"></div>
       </div>
 
-      <div className="w-full max-w-md bg-white rounded-[2.5rem] shadow-2xl p-10 relative z-10 border border-slate-100">
-        <div className="flex flex-col items-center mb-10">
-          <div className="w-20 h-20 bg-indigo-600 rounded-3xl flex items-center justify-center text-white shadow-xl shadow-indigo-200 mb-6">
+      <div className="w-full max-w-md bg-white rounded-[3rem] shadow-2xl p-12 relative z-10 border border-slate-100">
+        <div className="flex flex-col items-center mb-10 text-center">
+          <div className="w-20 h-20 bg-indigo-600 rounded-[2rem] flex items-center justify-center text-white shadow-2xl shadow-indigo-100 mb-6">
             <School size={40} strokeWidth={2.5} />
           </div>
           <h1 className="text-3xl font-black text-slate-900 tracking-tight">EduStream Pro</h1>
-          <p className="text-slate-500 font-medium mt-1">School Management ERP</p>
+          <p className="text-slate-500 font-bold mt-1 text-sm uppercase tracking-widest">Global ERP Portal</p>
         </div>
 
         <form onSubmit={handleLogin} className="space-y-6">
           <div className="space-y-2">
-            <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Username</label>
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Email / Mobile / Roll No</label>
             <div className="relative">
-              <UserIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
+              <UserIcon className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
               <input 
                 type="text" 
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-600 transition-all font-medium" 
-                placeholder="Enter your username"
+                className="w-full pl-14 pr-6 py-5 bg-slate-50 border-2 border-slate-100 rounded-3xl outline-none focus:border-indigo-600 transition-all font-bold text-slate-900" 
+                placeholder="User Identifier"
                 required
               />
             </div>
           </div>
 
           <div className="space-y-2">
-            <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Password</label>
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Access Password</label>
             <div className="relative">
-              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
+              <Lock className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
               <input 
                 type="password" 
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-600 transition-all font-medium" 
+                className="w-full pl-14 pr-6 py-5 bg-slate-50 border-2 border-slate-100 rounded-3xl outline-none focus:border-indigo-600 transition-all font-bold text-slate-900" 
                 placeholder="••••••••"
                 required
               />
@@ -94,24 +100,28 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
           </div>
 
           {error && (
-            <div className="p-4 bg-rose-50 border border-rose-100 rounded-xl flex items-center gap-3 text-rose-600 text-sm font-bold animate-shake">
-              <ShieldCheck size={18} />
-              {error}
+            <div className="p-4 bg-rose-50 border border-rose-100 rounded-2xl flex items-center gap-3 text-rose-600 text-xs font-black uppercase tracking-tight animate-shake">
+              <ShieldCheck size={18} /> {error}
             </div>
           )}
 
           <button 
             type="submit"
             disabled={loading}
-            className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-black shadow-xl shadow-indigo-100 hover:bg-indigo-700 transition-all flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50"
+            className="w-full py-5 bg-indigo-600 text-white rounded-[2rem] font-black shadow-2xl shadow-indigo-100 hover:bg-indigo-700 transition-all flex items-center justify-center gap-3 active:scale-95 disabled:opacity-50"
           >
-            {loading ? <Loader2 className="animate-spin" /> : 'Sign In to Portal'}
+            {loading ? <Loader2 className="animate-spin" /> : 'Enter Platform'}
           </button>
         </form>
 
-        <p className="mt-8 text-center text-xs text-slate-400 font-medium">
-          Secured by EduStream Cloud Infrastructure
-        </p>
+        <div className="mt-8 pt-8 border-t border-slate-50 text-center space-y-2">
+            <p className="text-[9px] text-slate-400 font-black uppercase tracking-widest">Quick Demo Credentials</p>
+            <div className="flex justify-center gap-4 text-[9px] font-bold text-indigo-400 uppercase">
+                <span>Admin: admin / admin</span>
+                <span>Teacher: (use set mobile) / teacher</span>
+                <span>Student: (use roll no) / student</span>
+            </div>
+        </div>
       </div>
     </div>
   );

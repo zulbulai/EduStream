@@ -1,4 +1,5 @@
 
+
 export enum UserRole {
   ADMIN = 'Admin',
   TEACHER = 'Teacher',
@@ -9,10 +10,31 @@ export enum UserRole {
 
 export interface User {
   id: string;
-  username: string;
+  username: string; // Used for Email/Mobile login
   role: UserRole;
   password?: string;
   name: string;
+  linkedId?: string; // Links to Student ID or Staff ID
+}
+
+export interface ExamMark {
+  id: string;
+  studentId: string;
+  examName: string; // Unit Test 1, Final, etc.
+  subject: string;
+  marksObtained: number;
+  maxMarks: number;
+  date: string;
+}
+
+export interface Notification {
+  id: string;
+  from: string;
+  to: 'ALL' | 'TEACHERS' | 'STUDENTS' | string; // Role or Specific Class
+  title: string;
+  message: string;
+  date: string;
+  priority: 'Normal' | 'Urgent';
 }
 
 export interface Student {
@@ -29,7 +51,7 @@ export interface Student {
   bloodGroup: string;
   motherTongue: string;
   email?: string;
-  mobile?: string;
+  mobile: string;
   
   // Family
   fatherName: string;
@@ -42,29 +64,33 @@ export interface Student {
   admissionClass: string;
   section?: string;
   rollNo?: string;
-  stream?: string;
   subjects: string[];
-  previousSchool?: string;
-  previousGrade?: string;
   
   // Address & Emergency
   address: string;
   city: string;
   state: string;
   pinCode: string;
-  emergencyContactName: string;
   emergencyContactMobile: string;
   
-  transportRequired: boolean;
-  busRoute?: string;
   status: 'Active' | 'Alumni' | 'Suspended';
   photo?: string;
-  documents: {
-    type: string;
-    url: string;
-    name: string;
-  }[];
   admissionDate: string;
+}
+
+export interface Staff {
+  id: string;
+  name: string;
+  role: UserRole;
+  email: string;
+  mobile: string;
+  assignedClass?: string; 
+  salary: number;
+  advanceAmount: number;
+  joiningDate: string;
+  qualification: string;
+  presentDays: number;
+  leaveDays: number;
 }
 
 export interface AttendanceRecord {
@@ -82,32 +108,21 @@ export interface FeeTransaction {
   studentName: string;
   class: string;
   month: string;
-  feeType: 'Tuition Fee' | 'Admission Fee' | 'Exam Fee' | 'Transport Fee' | 'Library Fee' | 'Uniform Fee' | 'Other';
+  feeType: string;
+  // Added missing fields baseAmount, fineAmount, and fineReason to match usage in FeeManagement component
   baseAmount: number;
   fineAmount: number;
+  fineReason: string;
   totalAmount: number;
-  fineReason?: string;
-  mode: 'Cash' | 'UPI' | 'Cheque' | 'Bank Transfer';
-  status: 'Pending' | 'Verified';
+  mode: string;
+  status: string;
   collectedBy: string;
-}
-
-export interface Staff {
-  id: string;
-  name: string;
-  role: UserRole;
-  email: string;
-  mobile: string;
-  assignedClass?: string; 
-  salary: number;
-  joiningDate: string;
-  qualification: string;
 }
 
 export interface TimeSlot {
   id: string;
   classId: string;
-  day: 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday';
+  day: string;
   periodNumber: number; 
   subject: string;
   teacherId: string;

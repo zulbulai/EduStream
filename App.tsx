@@ -13,6 +13,9 @@ import AppsScriptExporter from './components/AppsScriptExporter';
 import Settings from './components/Settings';
 import Login from './components/Login';
 import TimeTableManager from './components/TimeTableManager';
+import StudentPortal from './components/StudentPortal';
+import TeacherPortal from './components/TeacherPortal';
+import ExamManager from './components/ExamManager';
 import { UserRole, User } from './types';
 import { StorageService } from './services/storage';
 
@@ -48,6 +51,27 @@ const App: React.FC = () => {
   }
 
   const renderContent = () => {
+    // 1. Student Logic
+    if (currentUser.role === UserRole.STUDENT) {
+       switch(activeTab) {
+          case 'dashboard': return <StudentPortal studentId={currentUser.linkedId!} />;
+          case 'timetable': return <TimeTableManager />;
+          default: return <StudentPortal studentId={currentUser.linkedId!} />;
+       }
+    }
+
+    // 2. Teacher Logic
+    if (currentUser.role === UserRole.TEACHER) {
+       switch(activeTab) {
+          case 'dashboard': return <TeacherPortal staffId={currentUser.linkedId!} />;
+          case 'attendance': return <AttendanceSystem />;
+          case 'marks': return <ExamManager />;
+          case 'timetable': return <TimeTableManager />;
+          default: return <TeacherPortal staffId={currentUser.linkedId!} />;
+       }
+    }
+
+    // 3. Admin / Staff Logic
     switch (activeTab) {
       case 'dashboard': return <Dashboard />;
       case 'admission': return <AdmissionForm />;
@@ -56,6 +80,7 @@ const App: React.FC = () => {
       case 'fees': return <FeeManagement currentUser={currentUser} />;
       case 'staff': return <StaffList />;
       case 'timetable': return <TimeTableManager />;
+      case 'marks': return <ExamManager />;
       case 'insights': return <AIInsights />;
       case 'script': return <AppsScriptExporter />;
       case 'settings': return <Settings />;
@@ -70,6 +95,7 @@ const App: React.FC = () => {
         setActiveTab={setActiveTab} 
         isOpen={isSidebarOpen} 
         toggle={() => setSidebarOpen(!isSidebarOpen)}
+        userRole={currentUser.role}
       />
       
       <div className="flex-1 flex flex-col min-w-0">
