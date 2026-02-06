@@ -1,6 +1,6 @@
 
 import React, { useMemo } from 'react';
-import { Users, UserCheck, UserMinus, TrendingUp, Calendar, AlertCircle, DollarSign, Cpu, ArrowUpRight } from 'lucide-react';
+import { Users, UserCheck, UserMinus, TrendingUp, Calendar, AlertCircle, DollarSign, Cpu, ArrowUpRight, Clock, GraduationCap } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
 import { StorageService } from '../services/storage';
 
@@ -8,13 +8,18 @@ const Dashboard: React.FC = () => {
   const students = StorageService.getStudents();
   const fees = StorageService.getFees();
   const attendance = StorageService.getAttendance();
+  const staff = StorageService.getStaff();
+  const schedule = StorageService.getSchedule();
+
+  const currentDay = new Date().toLocaleDateString('en-US', { weekday: 'long' }) as any;
+  const todaySchedule = schedule.filter(s => s.day === currentDay).sort((a,b) => a.periodNumber - b.periodNumber);
+  const classTeachers = staff.filter(s => s.assignedClass);
 
   const stats = useMemo(() => {
     const totalStudents = students.length;
     const today = new Date().toISOString().split('T')[0];
     const todayAttendance = attendance.filter(a => a.date === today);
     const presentCount = todayAttendance.filter(a => a.status === 'P').length;
-    // Fix: Using totalAmount instead of non-existent amount property
     const totalFee = fees.reduce((sum, f) => sum + f.totalAmount, 0);
 
     return [
@@ -49,11 +54,9 @@ const Dashboard: React.FC = () => {
     ];
   }, [students, fees, attendance]);
 
-  // Transform real data for charts
   const feeChartData = useMemo(() => {
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
     return months.map(m => {
-      // Fix: Using totalAmount instead of non-existent amount property
       const amount = fees.filter(f => f.month.includes(m)).reduce((s, f) => s + f.totalAmount, 0);
       return { month: m, amount: amount / 1000 };
     });
@@ -61,7 +64,6 @@ const Dashboard: React.FC = () => {
 
   const attendanceChartData = useMemo(() => {
     const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-    // In a real app we'd filter by the last 6 days. For now, showing dummy trend with real scaling.
     return days.map(d => ({ name: d, p: 85 + Math.random() * 10, a: 5 + Math.random() * 5 }));
   }, []);
 
@@ -99,17 +101,82 @@ const Dashboard: React.FC = () => {
         ))}
       </div>
 
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Today's Academic Schedule */}
+        <div className="lg:col-span-2 bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100">
+           <div className="flex items-center justify-between mb-8">
+              <h3 className="text-lg font-black text-slate-900 flex items-center gap-3">
+                 <div className="w-2 h-6 bg-indigo-600 rounded-full"></div>
+                 Schedule: {currentDay}
+              </h3>
+              <span className="text-[10px] font-black bg-indigo-50 text-indigo-600 px-3 py-1 rounded-full uppercase">Live periods</span>
+           </div>
+           
+           <div className="space-y-4 max-h-[400px] overflow-y-auto custom-scrollbar pr-2">
+              {todaySchedule.length > 0 ? todaySchedule.map((slot) => {
+                const teacher = staff.find(t => t.id === slot.teacherId);
+                return (
+                  <div key={slot.id} className="flex items-center gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-100 hover:bg-indigo-50 transition-colors">
+                     <div className="w-12 h-12 bg-white rounded-xl flex flex-col items-center justify-center border border-slate-200">
+                        <span className="text-[9px] font-black text-slate-400 uppercase">P-{slot.periodNumber}</span>
+                        <Clock size={14} className="text-indigo-600" />
+                     </div>
+                     <div className="flex-1">
+                        <h4 className="text-sm font-black text-slate-900">{slot.subject}</h4>
+                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{slot.classId} • {slot.startTime} - {slot.endTime}</p>
+                     </div>
+                     <div className="text-right">
+                        <p className="text-[10px] font-black text-indigo-600 uppercase tracking-widest">{teacher?.name}</p>
+                        <p className="text-[9px] text-slate-400 font-bold">Assigned Faculty</p>
+                     </div>
+                  </div>
+                )
+              }) : (
+                <div className="py-20 text-center opacity-30">
+                  <Calendar size={48} className="mx-auto mb-4" />
+                  <p className="text-sm font-bold uppercase tracking-widest">No classes scheduled today</p>
+                </div>
+              )}
+           </div>
+        </div>
+
+        {/* Class Teachers Sidebar */}
+        <div className="bg-indigo-900 p-8 rounded-[2.5rem] shadow-2xl text-white relative overflow-hidden group">
+           <div className="absolute top-0 right-0 p-10 opacity-10 transform group-hover:scale-125 transition-transform duration-700">
+              <GraduationCap size={120} />
+           </div>
+           <div className="relative z-10">
+              <h3 className="text-xl font-black mb-6 tracking-tight">Active Class Teachers</h3>
+              <div className="space-y-4">
+                 {classTeachers.map(ct => (
+                   <div key={ct.id} className="flex items-center gap-4 bg-white/5 p-4 rounded-2xl border border-white/10">
+                      <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center font-black">
+                        {ct.name[0]}
+                      </div>
+                      <div>
+                        <p className="text-sm font-black">{ct.name}</p>
+                        <p className="text-[10px] text-indigo-300 font-black uppercase tracking-widest">Class {ct.assignedClass}</p>
+                      </div>
+                   </div>
+                 ))}
+                 {classTeachers.length === 0 && (
+                   <p className="text-xs font-bold text-indigo-300 italic">No class teachers assigned yet.</p>
+                 )}
+              </div>
+              <button className="w-full mt-8 py-4 bg-white text-indigo-900 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl hover:bg-indigo-50 transition-all active:scale-95">
+                 Manage Faculty Assignments
+              </button>
+           </div>
+        </div>
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100">
           <div className="flex items-center justify-between mb-8">
             <div>
-              <h3 className="text-lg font-bold text-slate-900">Attendance Statistics</h3>
-              <p className="text-xs text-slate-400 font-medium">Daily participation percentage</p>
+              <h3 className="text-lg font-bold text-slate-900">Attendance Trends</h3>
+              <p className="text-xs text-slate-400 font-medium">Daily participation rate</p>
             </div>
-            <select className="text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 outline-none">
-              <option>Current Week</option>
-              <option>Last Week</option>
-            </select>
           </div>
           <div className="h-72">
             <ResponsiveContainer width="100%" height="100%">
@@ -117,10 +184,7 @@ const Dashboard: React.FC = () => {
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
                 <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 11, fontWeight: 600}} />
                 <YAxis axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 11}} />
-                <Tooltip 
-                  contentStyle={{ borderRadius: '20px', border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)' }}
-                  cursor={{ fill: '#f8fafc' }}
-                />
+                <Tooltip contentStyle={{ borderRadius: '20px', border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)' }} cursor={{ fill: '#f8fafc' }} />
                 <Bar dataKey="p" fill="#10b981" radius={[6, 6, 0, 0]} barSize={16} name="Present" />
                 <Bar dataKey="a" fill="#f43f5e" radius={[6, 6, 0, 0]} barSize={16} name="Absent" />
               </BarChart>
@@ -132,9 +196,8 @@ const Dashboard: React.FC = () => {
           <div className="flex items-center justify-between mb-8">
             <div>
               <h3 className="text-lg font-bold text-slate-900">Revenue Flow</h3>
-              <p className="text-xs text-slate-400 font-medium">Fee collection in ₹ Thousands</p>
+              <p className="text-xs text-slate-400 font-medium">Collection in ₹ Thousands</p>
             </div>
-            <span className="text-[10px] font-black bg-indigo-50 text-indigo-600 px-3 py-1 rounded-full uppercase tracking-widest">Real-time</span>
           </div>
           <div className="h-72">
             <ResponsiveContainer width="100%" height="100%">
@@ -155,59 +218,8 @@ const Dashboard: React.FC = () => {
           </div>
         </div>
       </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 bg-white rounded-[2.5rem] shadow-sm border border-slate-100 overflow-hidden">
-          <div className="p-8 border-b border-slate-50 flex items-center justify-between">
-            <h3 className="font-bold text-slate-900 text-lg">System Audit Log</h3>
-            <button className="text-indigo-600 text-xs font-black uppercase tracking-widest hover:underline">Full Report</button>
-          </div>
-          <div className="divide-y divide-slate-50">
-            {students.slice(-4).reverse().map((student) => (
-              <div key={student.id} className="p-5 hover:bg-slate-50 transition-all flex items-center gap-5">
-                <div className="w-12 h-12 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600 border border-indigo-100 font-black text-lg">
-                  {student.firstName[0]}
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm font-bold text-slate-900">New Enrollment: <span className="text-indigo-600">{student.firstName} {student.lastName}</span></p>
-                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Class {student.admissionClass} • {student.admissionDate}</p>
-                </div>
-                <span className="text-[9px] font-black px-3 py-1 rounded-full bg-indigo-50 text-indigo-600 uppercase tracking-widest">Admission</span>
-              </div>
-            ))}
-            {students.length === 0 && (
-              <div className="p-20 text-center opacity-30">
-                <p className="text-sm font-bold">No recent activities to display</p>
-              </div>
-            )}
-          </div>
-        </div>
-
-        <div className="bg-slate-900 rounded-[2.5rem] shadow-2xl p-8 text-white relative overflow-hidden group">
-          <div className="absolute -top-10 -right-10 p-12 opacity-10 transform group-hover:scale-110 transition-all duration-700 text-white">
-            <Cpu size={240} />
-          </div>
-          <div className="relative z-10">
-            <div className="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center mb-6">
-              <Sparkles size={24} />
-            </div>
-            <h3 className="text-2xl font-black mb-4 tracking-tight">AI School Assistant</h3>
-            <p className="text-slate-400 text-sm mb-8 leading-relaxed font-medium italic">
-              "Based on your current fee collection rate, you are on track to exceed last session's revenue by 12.4%."
-            </p>
-            <button className="w-full py-4 bg-white text-slate-900 rounded-2xl font-black text-sm shadow-xl hover:bg-indigo-50 transition-all active:scale-95">
-              Ask AI for Advice
-            </button>
-          </div>
-        </div>
-      </div>
     </div>
   );
 };
-
-// Internal icon for AI section
-const Sparkles = ({ size }: { size: number }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/></svg>
-);
 
 export default Dashboard;

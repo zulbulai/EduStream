@@ -12,6 +12,7 @@ import AIInsights from './components/AIInsights';
 import AppsScriptExporter from './components/AppsScriptExporter';
 import Settings from './components/Settings';
 import Login from './components/Login';
+import TimeTableManager from './components/TimeTableManager';
 import { UserRole, User } from './types';
 import { StorageService } from './services/storage';
 
@@ -54,6 +55,7 @@ const App: React.FC = () => {
       case 'attendance': return <AttendanceSystem />;
       case 'fees': return <FeeManagement currentUser={currentUser} />;
       case 'staff': return <StaffList />;
+      case 'timetable': return <TimeTableManager />;
       case 'insights': return <AIInsights />;
       case 'script': return <AppsScriptExporter />;
       case 'settings': return <Settings />;

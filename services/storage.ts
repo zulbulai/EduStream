@@ -1,5 +1,5 @@
 
-import { Student, Staff, FeeTransaction, AttendanceRecord, SystemConfig, User } from '../types';
+import { Student, Staff, FeeTransaction, AttendanceRecord, SystemConfig, User, TimeSlot } from '../types';
 
 const KEYS = {
   STUDENTS: 'edustream_students',
@@ -7,7 +7,8 @@ const KEYS = {
   FEES: 'edustream_fees',
   ATTENDANCE: 'edustream_attendance',
   CONFIG: 'edustream_config',
-  AUTH: 'edustream_auth'
+  AUTH: 'edustream_auth',
+  SCHEDULE: 'edustream_schedule'
 };
 
 export const StorageService = {
@@ -61,6 +62,17 @@ export const StorageService = {
   saveAttendance: (records: AttendanceRecord[]) => {
     const existing = StorageService.getAttendance();
     localStorage.setItem(KEYS.ATTENDANCE, JSON.stringify([...existing, ...records]));
+  },
+
+  // Schedule / Timetable
+  getSchedule: (): TimeSlot[] => JSON.parse(localStorage.getItem(KEYS.SCHEDULE) || '[]'),
+  saveSchedule: (slots: TimeSlot[]) => {
+    localStorage.setItem(KEYS.SCHEDULE, JSON.stringify(slots));
+  },
+  addSlot: (slot: TimeSlot) => {
+    const schedule = StorageService.getSchedule();
+    schedule.push(slot);
+    localStorage.setItem(KEYS.SCHEDULE, JSON.stringify(schedule));
   },
 
   // Config

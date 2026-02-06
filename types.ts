@@ -44,10 +44,10 @@ export interface Student {
   status: 'Active' | 'Alumni' | 'Suspended';
   rollNo?: string;
   section?: string;
-  photo?: string; // Base64
+  photo?: string;
   documents: {
     type: string;
-    url: string; // Base64 or Link
+    url: string;
     name: string;
   }[];
   admissionDate: string;
@@ -84,10 +84,21 @@ export interface Staff {
   role: UserRole;
   email: string;
   mobile: string;
-  assignedClass?: string;
+  assignedClass?: string; // This marks them as the Class Teacher
   salary: number;
   joiningDate: string;
   qualification: string;
+}
+
+export interface TimeSlot {
+  id: string;
+  classId: string;
+  day: 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday';
+  periodNumber: number; // 1, 2, 3...
+  subject: string;
+  teacherId: string;
+  startTime: string;
+  endTime: string;
 }
 
 export interface SystemConfig {

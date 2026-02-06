@@ -12,7 +12,8 @@ import {
   FileCode,
   School,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  CalendarClock
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -28,6 +29,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpen, togg
     { id: 'admission', label: 'Admission', icon: UserPlus },
     { id: 'students', label: 'Student Directory', icon: Users },
     { id: 'attendance', label: 'Attendance', icon: CheckSquare },
+    { id: 'timetable', label: 'Class Schedule', icon: CalendarClock },
     { id: 'fees', label: 'Fee Management', icon: Wallet },
     { id: 'staff', label: 'Staff Master', icon: GraduationCap },
     { id: 'insights', label: 'AI Smart Insights', icon: Cpu },
