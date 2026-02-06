@@ -24,11 +24,27 @@ const App: React.FC = () => {
   const [isSidebarOpen, setSidebarOpen] = useState(true);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
 
   useEffect(() => {
-    const user = StorageService.getCurrentUser();
-    if (user) setCurrentUser(user);
-    setIsInitialized(true);
+    const initApp = async () => {
+      const user = StorageService.getCurrentUser();
+      if (user) {
+        setCurrentUser(user);
+        // Automatic sync on load if logged in
+        setIsSyncing(true);
+        try {
+          await StorageService.syncFromCloud();
+        } catch (e) {
+          console.error("Initial Sync Failed", e);
+        } finally {
+          setIsSyncing(false);
+        }
+      }
+      setIsInitialized(true);
+    };
+
+    initApp();
 
     const handleResize = () => {
       if (window.innerWidth < 1024) setSidebarOpen(false);
@@ -51,7 +67,6 @@ const App: React.FC = () => {
   }
 
   const renderContent = () => {
-    // 1. Student Logic
     if (currentUser.role === UserRole.STUDENT) {
        switch(activeTab) {
           case 'dashboard': return <StudentPortal studentId={currentUser.linkedId!} />;
@@ -60,7 +75,6 @@ const App: React.FC = () => {
        }
     }
 
-    // 2. Teacher Logic
     if (currentUser.role === UserRole.TEACHER) {
        switch(activeTab) {
           case 'dashboard': return <TeacherPortal staffId={currentUser.linkedId!} />;
@@ -71,7 +85,6 @@ const App: React.FC = () => {
        }
     }
 
-    // 3. Admin / Staff Logic
     switch (activeTab) {
       case 'dashboard': return <Dashboard />;
       case 'admission': return <AdmissionForm />;
@@ -90,6 +103,12 @@ const App: React.FC = () => {
 
   return (
     <div className="flex h-screen bg-slate-50 overflow-hidden">
+      {isSyncing && (
+        <div className="fixed top-4 right-4 z-[999] bg-indigo-600 text-white px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest shadow-2xl flex items-center gap-2 animate-bounce">
+          <div className="w-2 h-2 bg-white rounded-full animate-ping"></div>
+          Syncing Cloud Data...
+        </div>
+      )}
       <Sidebar 
         activeTab={activeTab} 
         setActiveTab={setActiveTab} 

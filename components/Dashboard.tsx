@@ -1,9 +1,10 @@
 
-import React, { useMemo } from 'react';
-import { Users, UserCheck, UserMinus, DollarSign, Calendar, AlertCircle, ArrowUpRight, Clock, GraduationCap, CheckCircle2, XCircle, ShieldCheck } from 'lucide-react';
+import React, { useMemo, useState } from 'react';
+import { Users, UserCheck, UserMinus, DollarSign, Calendar, AlertCircle, ArrowUpRight, Clock, GraduationCap, CheckCircle2, XCircle, ShieldCheck, RefreshCw, Loader2 } from 'lucide-react';
 import { StorageService } from '../services/storage';
 
 const Dashboard: React.FC = () => {
+  const [syncing, setSyncing] = useState(false);
   const students = StorageService.getStudents();
   const fees = StorageService.getFees();
   const attendance = StorageService.getAttendance();
@@ -27,14 +28,22 @@ const Dashboard: React.FC = () => {
     ];
   }, [students, fees, attendance, verifiedFees, pendingApprovals]);
 
-  const handleApprove = (id: string) => {
+  const handleApprove = async (id: string) => {
     const txn = fees.find(f => f.id === id);
     if (txn) {
       txn.status = 'Verified';
       StorageService.saveFee(txn);
-      alert("Payment Authorized Successfully.");
-      window.location.reload();
+      alert("Payment Authorized & Synced.");
+      window.location.reload(); // Hard refresh to ensure storage is clean
     }
+  };
+
+  const handleManualSync = async () => {
+    setSyncing(true);
+    const success = await StorageService.syncFromCloud();
+    setSyncing(false);
+    if (success) window.location.reload();
+    else alert("Sync failed. Check Cloud URL in Settings.");
   };
 
   return (
@@ -44,9 +53,19 @@ const Dashboard: React.FC = () => {
           <h1 className="text-3xl font-black text-slate-900 tracking-tight">Executive Dashboard</h1>
           <p className="text-slate-500 font-medium">Monitoring school operations & verified finance.</p>
         </div>
-        <div className="flex items-center gap-3 bg-white px-5 py-3 rounded-2xl shadow-sm border border-slate-200">
-          <ShieldCheck size={20} className="text-indigo-600" />
-          <span className="text-sm font-bold text-slate-700">Admin Clearance Level: High</span>
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={handleManualSync}
+            disabled={syncing}
+            className="p-3 bg-white text-indigo-600 rounded-2xl shadow-sm border border-slate-200 hover:bg-indigo-50 transition-all flex items-center gap-2 text-xs font-black uppercase tracking-widest"
+          >
+            {syncing ? <Loader2 size={16} className="animate-spin" /> : <RefreshCw size={16} />}
+            {syncing ? 'Syncing...' : 'Live Cloud Sync'}
+          </button>
+          <div className="flex items-center gap-3 bg-indigo-900 text-white px-5 py-3 rounded-2xl shadow-xl">
+            <ShieldCheck size={20} className="text-indigo-400" />
+            <span className="text-xs font-black uppercase tracking-widest">Admin Mode</span>
+          </div>
         </div>
       </div>
 
@@ -66,7 +85,6 @@ const Dashboard: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Pending Approvals Table */}
         <div className="lg:col-span-2 bg-white p-8 rounded-[3.5rem] shadow-sm border border-slate-100 h-fit">
            <div className="flex items-center justify-between mb-8">
               <h3 className="text-lg font-black text-slate-900 flex items-center gap-3">
@@ -94,9 +112,6 @@ const Dashboard: React.FC = () => {
                         >
                            <CheckCircle2 size={14} /> Approve
                         </button>
-                        <button className="p-2 bg-rose-50 text-rose-500 rounded-xl hover:bg-rose-100 transition-all">
-                           <XCircle size={14} />
-                        </button>
                      </div>
                   </div>
               )) : (
@@ -108,16 +123,15 @@ const Dashboard: React.FC = () => {
            </div>
         </div>
 
-        {/* System Activity */}
         <div className="bg-slate-900 p-8 rounded-[2.5rem] shadow-2xl text-white">
-           <h3 className="text-xl font-black mb-6 tracking-tight flex items-center gap-3"><Clock size={20} className="text-indigo-400" /> Recent Logins</h3>
+           <h3 className="text-xl font-black mb-6 tracking-tight flex items-center gap-3"><Clock size={20} className="text-indigo-400" /> Recent Verifications</h3>
            <div className="space-y-4">
-              {verifiedFees.slice(0, 5).map(f => (
+              {verifiedFees.slice(0, 8).map(f => (
                 <div key={f.id} className="flex items-center gap-4 bg-white/5 p-4 rounded-2xl border border-white/10">
                    <div className="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center font-black text-[10px]">PASS</div>
                    <div>
                      <p className="text-xs font-black">{f.studentName}</p>
-                     <p className="text-[8px] text-indigo-300 font-black uppercase tracking-widest">Verified payment ₹{f.totalAmount}</p>
+                     <p className="text-[8px] text-indigo-300 font-black uppercase tracking-widest">₹{f.totalAmount} Settled</p>
                    </div>
                 </div>
               ))}

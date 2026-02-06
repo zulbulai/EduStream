@@ -36,6 +36,12 @@ export interface Notification {
   priority: 'Normal' | 'Urgent';
 }
 
+export interface StudentDocument {
+  type: 'Aadhar' | 'TC' | 'Marksheet' | 'BirthCertificate' | 'Other';
+  name: string;
+  data: string; // base64
+}
+
 export interface Student {
   id: string;
   admissionNo: string;
@@ -46,6 +52,8 @@ export interface Student {
   dob: string;
   email?: string;
   mobile: string;
+  aadharNo: string;
+  otherId?: string;
   fatherName: string;
   fatherMobile: string;
   motherName: string;
@@ -58,6 +66,12 @@ export interface Student {
   status: 'Active' | 'Alumni' | 'Suspended';
   photo?: string;
   admissionDate: string;
+  // Academic History
+  previousSchool?: string;
+  previousGrade?: string;
+  tcNumber?: string;
+  // Documents
+  studentDocuments: StudentDocument[];
 }
 
 export interface Staff {
@@ -98,7 +112,7 @@ export interface FeeTransaction {
   mode: string;
   status: 'Pending' | 'Verified' | 'Rejected';
   collectedBy: string;
-  requestedBy: string; // The person who initiated the record
+  requestedBy: string; 
 }
 
 export interface TimeSlot {
