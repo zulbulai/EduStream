@@ -12,8 +12,12 @@ const KEYS = {
 };
 
 export const StorageService = {
+  // Helpers
+  getItem: (key: string) => JSON.parse(localStorage.getItem(key) || '[]'),
+  setItem: (key: string, data: any) => localStorage.setItem(key, JSON.stringify(data)),
+
   // Students
-  getStudents: (): Student[] => JSON.parse(localStorage.getItem(KEYS.STUDENTS) || '[]'),
+  getStudents: (): Student[] => StorageService.getItem(KEYS.STUDENTS),
   saveStudent: (student: Student) => {
     const students = StorageService.getStudents();
     const index = students.findIndex(s => s.id === student.id);
@@ -22,15 +26,18 @@ export const StorageService = {
     } else {
       students.push(student);
     }
-    localStorage.setItem(KEYS.STUDENTS, JSON.stringify(students));
+    StorageService.setItem(KEYS.STUDENTS, students);
+    // Auto sync if URL is present (background)
+    StorageService.backgroundSync();
   },
   deleteStudent: (id: string) => {
     const students = StorageService.getStudents().filter(s => s.id !== id);
-    localStorage.setItem(KEYS.STUDENTS, JSON.stringify(students));
+    StorageService.setItem(KEYS.STUDENTS, students);
+    StorageService.backgroundSync();
   },
 
   // Staff
-  getStaff: (): Staff[] => JSON.parse(localStorage.getItem(KEYS.STAFF) || '[]'),
+  getStaff: (): Staff[] => StorageService.getItem(KEYS.STAFF),
   saveStaff: (member: Staff) => {
     const staff = StorageService.getStaff();
     const index = staff.findIndex(s => s.id === member.id);
@@ -39,41 +46,34 @@ export const StorageService = {
     } else {
       staff.push(member);
     }
-    localStorage.setItem(KEYS.STAFF, JSON.stringify(staff));
+    StorageService.setItem(KEYS.STAFF, staff);
+    StorageService.backgroundSync();
   },
   deleteStaff: (id: string) => {
     const staff = StorageService.getStaff().filter(s => s.id !== id);
-    localStorage.setItem(KEYS.STAFF, JSON.stringify(staff));
+    StorageService.setItem(KEYS.STAFF, staff);
+    StorageService.backgroundSync();
   },
   
   // Fees
-  getFees: (): FeeTransaction[] => JSON.parse(localStorage.getItem(KEYS.FEES) || '[]'),
+  getFees: (): FeeTransaction[] => StorageService.getItem(KEYS.FEES),
   saveFee: (fee: FeeTransaction) => {
     const fees = StorageService.getFees();
-    localStorage.setItem(KEYS.FEES, JSON.stringify([fee, ...fees]));
-  },
-  updateFeeStatus: (id: string, status: 'Verified') => {
-    const fees = StorageService.getFees().map(f => f.id === id ? { ...f, status } : f);
-    localStorage.setItem(KEYS.FEES, JSON.stringify(fees));
+    StorageService.setItem(KEYS.FEES, [fee, ...fees]);
+    StorageService.backgroundSync();
   },
 
   // Attendance
-  getAttendance: (): AttendanceRecord[] => JSON.parse(localStorage.getItem(KEYS.ATTENDANCE) || '[]'),
+  getAttendance: (): AttendanceRecord[] => StorageService.getItem(KEYS.ATTENDANCE),
   saveAttendance: (records: AttendanceRecord[]) => {
     const existing = StorageService.getAttendance();
-    localStorage.setItem(KEYS.ATTENDANCE, JSON.stringify([...existing, ...records]));
+    StorageService.setItem(KEYS.ATTENDANCE, [...existing, ...records]);
+    StorageService.backgroundSync();
   },
 
-  // Schedule / Timetable
-  getSchedule: (): TimeSlot[] => JSON.parse(localStorage.getItem(KEYS.SCHEDULE) || '[]'),
-  saveSchedule: (slots: TimeSlot[]) => {
-    localStorage.setItem(KEYS.SCHEDULE, JSON.stringify(slots));
-  },
-  addSlot: (slot: TimeSlot) => {
-    const schedule = StorageService.getSchedule();
-    schedule.push(slot);
-    localStorage.setItem(KEYS.SCHEDULE, JSON.stringify(schedule));
-  },
+  // Schedule
+  getSchedule: (): TimeSlot[] => StorageService.getItem(KEYS.SCHEDULE),
+  saveSchedule: (slots: TimeSlot[]) => StorageService.setItem(KEYS.SCHEDULE, slots),
 
   // Config
   getConfig: (): SystemConfig => JSON.parse(localStorage.getItem(KEYS.CONFIG) || JSON.stringify({
@@ -85,5 +85,46 @@ export const StorageService = {
 
   // Auth
   getCurrentUser: (): User | null => JSON.parse(localStorage.getItem(KEYS.AUTH) || 'null'),
-  setCurrentUser: (user: User | null) => localStorage.setItem(KEYS.AUTH, JSON.stringify(user))
+  setCurrentUser: (user: User | null) => localStorage.setItem(KEYS.AUTH, JSON.stringify(user)),
+
+  // Cloud Sync Logic
+  backgroundSync: async () => {
+    const config = StorageService.getConfig();
+    if (!config.appsScriptUrl) return;
+    
+    const data = {
+      students: StorageService.getStudents(),
+      fees: StorageService.getFees(),
+      staff: StorageService.getStaff(),
+      attendance: StorageService.getAttendance()
+    };
+
+    try {
+      await fetch(config.appsScriptUrl, {
+        method: 'POST',
+        mode: 'no-cors',
+        body: JSON.stringify(data)
+      });
+    } catch (e) {
+      console.warn("Background sync failed", e);
+    }
+  },
+
+  syncFromCloud: async () => {
+    const config = StorageService.getConfig();
+    if (!config.appsScriptUrl) throw new Error("Cloud URL missing");
+
+    const response = await fetch(config.appsScriptUrl);
+    const result = await response.json();
+
+    if (result.status === 'success' && result.data) {
+      const { students, fees, staff, attendance } = result.data;
+      if (students) StorageService.setItem(KEYS.STUDENTS, students);
+      if (fees) StorageService.setItem(KEYS.FEES, fees);
+      if (staff) StorageService.setItem(KEYS.STAFF, staff);
+      if (attendance) StorageService.setItem(KEYS.ATTENDANCE, attendance);
+      return true;
+    }
+    return false;
+  }
 };
