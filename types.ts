@@ -66,11 +66,9 @@ export interface Student {
   status: 'Active' | 'Alumni' | 'Suspended';
   photo?: string;
   admissionDate: string;
-  // Academic History
   previousSchool?: string;
   previousGrade?: string;
   tcNumber?: string;
-  // Documents
   studentDocuments: StudentDocument[];
 }
 
@@ -115,19 +113,22 @@ export interface FeeTransaction {
   requestedBy: string; 
 }
 
+export interface SystemConfig {
+  schoolName: string;
+  appsScriptUrl: string;
+  supabaseUrl?: string;
+  supabaseAnonKey?: string;
+  currentSession: string;
+}
+
+// Added TimeSlot interface to support TimeTableManager requirements
 export interface TimeSlot {
   id: string;
   classId: string;
-  day: string;
-  periodNumber: number; 
+  day: 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday';
+  periodNumber: number;
   subject: string;
   teacherId: string;
   startTime: string;
   endTime: string;
-}
-
-export interface SystemConfig {
-  schoolName: string;
-  appsScriptUrl: string;
-  currentSession: string;
 }

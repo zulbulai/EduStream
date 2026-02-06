@@ -6,7 +6,7 @@ const AppsScriptExporter: React.FC = () => {
   const [copied, setCopied] = useState(false);
 
   const scriptCode = `/**
- * EDUSTREAM PRO - CLOUD ENGINE v12.0 (DEEP-SYNC FIX)
+ * EDUSTREAM PRO - CLOUD ENGINE v12.1 (DEEP-SYNC FIX + TIMETABLE)
  * This script serves as the backend database for your school management system.
  */
 
@@ -34,11 +34,15 @@ const DB_CONFIG = {
   NOTIFICATIONS: {
     sheetName: 'NOTIFICATIONS',
     headers: ['ID', 'From', 'To', 'Title', 'Message', 'Date', 'Priority']
+  },
+  TIMETABLE: {
+    sheetName: 'TIMETABLE',
+    headers: ['ID', 'Class_ID', 'Day', 'Period_Number', 'Subject', 'Teacher_ID', 'Start_Time', 'End_Time']
   }
 };
 
 function onOpen() {
-  SpreadsheetApp.getUi().createMenu('🏫 EduStream ERP v12.0')
+  SpreadsheetApp.getUi().createMenu('🏫 EduStream ERP v12.1')
     .addItem('🚀 Initial Database Setup', 'initializeEnterpriseSheets')
     .addItem('🧹 Clean Duplicate IDs', 'cleanDuplicates')
     .addToUi();
@@ -62,6 +66,7 @@ function doPost(e) {
     if (payload.marks) syncData('EXAM_MARKS', payload.marks, m => [m.id, m.studentId, m.examName, m.subject, m.marksObtained, m.maxMarks, m.date]);
     if (payload.notifications) syncData('NOTIFICATIONS', payload.notifications, n => [n.id, n.from, n.to, n.title, n.message, n.date, n.priority]);
     if (payload.attendance) syncData('ATTENDANCE_LOGS', payload.attendance, a => [a.date, a.classSection, a.studentId, a.status, a.markedBy]);
+    if (payload.schedule) syncData('TIMETABLE', payload.schedule, s => [s.id, s.classId, s.day, s.periodNumber, s.subject, s.teacherId, s.startTime, s.endTime]);
     
     return ContentService.createTextOutput(JSON.stringify({ status: 'success' }))
       .setMimeType(ContentService.MimeType.JSON);
@@ -102,7 +107,7 @@ function syncData(key, data, mapFn) {
 
 function initializeEnterpriseSheets() {
   Object.keys(DB_CONFIG).forEach(key => syncData(key, [], () => []));
-  SpreadsheetApp.getUi().alert('✅ EduStream v12.0 Enterprise DB Ready!');
+  SpreadsheetApp.getUi().alert('✅ EduStream v12.1 Enterprise DB Ready!');
 }
 `;
 
@@ -117,10 +122,10 @@ function initializeEnterpriseSheets() {
       <div className="bg-white p-8 rounded-[3.5rem] border border-slate-100 shadow-xl flex flex-col md:flex-row items-center justify-between gap-6 ring-1 ring-slate-100">
         <div className="flex items-center gap-6">
           <div className="w-20 h-20 bg-indigo-600 rounded-[2.5rem] flex items-center justify-center text-white shadow-2xl shadow-indigo-200"><Database size={40} /></div>
-          <div><h2 className="text-3xl font-black text-slate-900 tracking-tight">Portal Sync Engine</h2><p className="text-indigo-600 font-bold tracking-tight text-sm uppercase">Version 12.0 Enterprise Build</p></div>
+          <div><h2 className="text-3xl font-black text-slate-900 tracking-tight">Portal Sync Engine</h2><p className="text-indigo-600 font-bold tracking-tight text-sm uppercase">Version 12.1 Enterprise Build</p></div>
         </div>
         <button onClick={handleCopy} className={`px-10 py-5 rounded-[2rem] font-black text-xs uppercase tracking-widest flex items-center gap-2 transition-all shadow-2xl active:scale-95 ${copied ? 'bg-emerald-500 text-white' : 'bg-slate-900 text-white hover:bg-indigo-600'}`}>
-          {copied ? <CheckCircle size={20} /> : <FileCode size={20} />}{copied ? 'Code Copied!' : 'Copy v12.0 Source Code'}
+          {copied ? <CheckCircle size={20} /> : <FileCode size={20} />}{copied ? 'Code Copied!' : 'Copy v12.1 Source Code'}
         </button>
       </div>
 
