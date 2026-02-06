@@ -96,8 +96,9 @@ export interface FeeTransaction {
   fineReason: string;
   totalAmount: number;
   mode: string;
-  status: string;
+  status: 'Pending' | 'Verified' | 'Rejected';
   collectedBy: string;
+  requestedBy: string; // The person who initiated the record
 }
 
 export interface TimeSlot {
