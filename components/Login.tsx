@@ -19,37 +19,48 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
     setLoading(true);
     setError('');
 
-    // Fetch latest data to verify users from cloud if possible
     setTimeout(() => {
       const students = StorageService.getStudents();
       const staff = StorageService.getStaff();
 
-      // 1. Admin Logic (Fixed)
+      // 1. Admin Logic
       if (username === 'admin' && password === 'admin') {
         const user: User = { id: 'admin-01', username: 'admin', role: UserRole.ADMIN, name: 'Super Admin' };
         StorageService.setCurrentUser(user);
         return onLogin(user);
       }
 
-      // 2. Teacher Login (Email or Mobile)
+      // 2. Teacher Login (Check Mobile or Email)
       const foundTeacher = staff.find(s => (s.email === username || s.mobile === username) && password === 'teacher');
       if (foundTeacher) {
-        const user: User = { id: foundTeacher.id, username: username, role: UserRole.TEACHER, name: foundTeacher.name, linkedId: foundTeacher.id };
+        const user: User = { 
+          id: foundTeacher.id, 
+          username: username, 
+          role: foundTeacher.role, 
+          name: foundTeacher.name, 
+          linkedId: foundTeacher.id 
+        };
         StorageService.setCurrentUser(user);
         return onLogin(user);
       }
 
-      // 3. Student Login (Email or Mobile or Admission No)
+      // 3. Student Login (Check Roll No, Mobile, or Email)
       const foundStudent = students.find(s => (s.email === username || s.mobile === username || s.admissionNo === username) && password === 'student');
       if (foundStudent) {
-        const user: User = { id: foundStudent.id, username: username, role: UserRole.STUDENT, name: foundStudent.firstName, linkedId: foundStudent.id };
+        const user: User = { 
+          id: foundStudent.id, 
+          username: username, 
+          role: UserRole.STUDENT, 
+          name: foundStudent.firstName, 
+          linkedId: foundStudent.id 
+        };
         StorageService.setCurrentUser(user);
         return onLogin(user);
       }
 
-      setError('Authentication failed. Check credentials.');
+      setError('Authentication failed. Check your ID/Email/Mobile and Password.');
       setLoading(false);
-    }, 1000);
+    }, 1200);
   };
 
   return (
@@ -100,7 +111,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
           </div>
 
           {error && (
-            <div className="p-4 bg-rose-50 border border-rose-100 rounded-2xl flex items-center gap-3 text-rose-600 text-xs font-black uppercase tracking-tight animate-shake">
+            <div className="p-4 bg-rose-50 border border-rose-100 rounded-2xl flex items-center gap-3 text-rose-600 text-xs font-black uppercase tracking-tight">
               <ShieldCheck size={18} /> {error}
             </div>
           )}
@@ -108,18 +119,18 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
           <button 
             type="submit"
             disabled={loading}
-            className="w-full py-5 bg-indigo-600 text-white rounded-[2rem] font-black shadow-2xl shadow-indigo-100 hover:bg-indigo-700 transition-all flex items-center justify-center gap-3 active:scale-95 disabled:opacity-50"
+            className="w-full py-5 bg-indigo-600 text-white rounded-[2rem] font-black shadow-2xl hover:bg-indigo-700 transition-all flex items-center justify-center gap-3 active:scale-95 disabled:opacity-50"
           >
             {loading ? <Loader2 className="animate-spin" /> : 'Enter Platform'}
           </button>
         </form>
 
         <div className="mt-8 pt-8 border-t border-slate-50 text-center space-y-2">
-            <p className="text-[9px] text-slate-400 font-black uppercase tracking-widest">Quick Demo Credentials</p>
-            <div className="flex justify-center gap-4 text-[9px] font-bold text-indigo-400 uppercase">
+            <p className="text-[9px] text-slate-400 font-black uppercase tracking-widest">Demo Credentials</p>
+            <div className="flex flex-col gap-1 text-[9px] font-bold text-indigo-400 uppercase">
                 <span>Admin: admin / admin</span>
-                <span>Teacher: (use set mobile) / teacher</span>
-                <span>Student: (use roll no) / student</span>
+                <span>Teacher: (registered mobile) / teacher</span>
+                <span>Student: (roll no) / student</span>
             </div>
         </div>
       </div>

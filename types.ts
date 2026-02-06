@@ -1,5 +1,4 @@
 
-
 export enum UserRole {
   ADMIN = 'Admin',
   TEACHER = 'Teacher',
@@ -10,17 +9,17 @@ export enum UserRole {
 
 export interface User {
   id: string;
-  username: string; // Used for Email/Mobile login
+  username: string; 
   role: UserRole;
   password?: string;
   name: string;
-  linkedId?: string; // Links to Student ID or Staff ID
+  linkedId?: string; 
 }
 
 export interface ExamMark {
   id: string;
   studentId: string;
-  examName: string; // Unit Test 1, Final, etc.
+  examName: string; 
   subject: string;
   marksObtained: number;
   maxMarks: number;
@@ -30,7 +29,7 @@ export interface ExamMark {
 export interface Notification {
   id: string;
   from: string;
-  to: 'ALL' | 'TEACHERS' | 'STUDENTS' | string; // Role or Specific Class
+  to: 'ALL' | 'TEACHERS' | 'STUDENTS' | string; 
   title: string;
   message: string;
   date: string;
@@ -40,39 +39,22 @@ export interface Notification {
 export interface Student {
   id: string;
   admissionNo: string;
+  rollNo?: string;
   firstName: string;
-  middleName?: string;
   lastName: string;
   gender: string;
   dob: string;
-  age: number;
-  religion: string;
-  category: string;
-  bloodGroup: string;
-  motherTongue: string;
   email?: string;
   mobile: string;
-  
-  // Family
   fatherName: string;
-  fatherOccupation: string;
   fatherMobile: string;
   motherName: string;
-  motherMobile?: string;
-  
-  // Academic
   admissionClass: string;
   section?: string;
-  rollNo?: string;
   subjects: string[];
-  
-  // Address & Emergency
   address: string;
   city: string;
-  state: string;
-  pinCode: string;
-  emergencyContactMobile: string;
-  
+  bloodGroup: string;
   status: 'Active' | 'Alumni' | 'Suspended';
   photo?: string;
   admissionDate: string;
@@ -109,7 +91,6 @@ export interface FeeTransaction {
   class: string;
   month: string;
   feeType: string;
-  // Added missing fields baseAmount, fineAmount, and fineReason to match usage in FeeManagement component
   baseAmount: number;
   fineAmount: number;
   fineReason: string;

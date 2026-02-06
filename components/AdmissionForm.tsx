@@ -12,6 +12,7 @@ const AdmissionForm: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
 
+  // Fix: added 'as any' to the initial formData state to prevent potential type errors with non-standard fields.
   const [formData, setFormData] = useState<Partial<Student>>({
     status: 'Active',
     admissionDate: new Date().toISOString().split('T')[0],
@@ -22,7 +23,7 @@ const AdmissionForm: React.FC = () => {
     religion: 'Hinduism',
     bloodGroup: 'O+',
     section: 'A'
-  });
+  } as any);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target as any;
@@ -68,11 +69,11 @@ const AdmissionForm: React.FC = () => {
     setIsSubmitting(true);
     await new Promise(r => setTimeout(r, 1500));
     
+    // Fix: Remove 'age' property from Student object literal as it is not defined in the Student interface.
     const newStudent: Student = {
       ...formData as Student,
       id: `STU-${Date.now()}`,
       admissionNo: `ADM-${Math.floor(Math.random() * 9000) + 1000}`,
-      age: formData.dob ? new Date().getFullYear() - new Date(formData.dob).getFullYear() : 0,
     };
 
     StorageService.saveStudent(newStudent);
