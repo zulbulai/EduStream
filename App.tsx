@@ -10,6 +10,7 @@ import StaffList from './components/StaffList';
 import StudentList from './components/StudentList';
 import AIInsights from './components/AIInsights';
 import AppsScriptExporter from './components/AppsScriptExporter';
+import Settings from './components/Settings';
 import Login from './components/Login';
 import { UserRole, User } from './types';
 import { StorageService } from './services/storage';
@@ -55,6 +56,7 @@ const App: React.FC = () => {
       case 'staff': return <StaffList />;
       case 'insights': return <AIInsights />;
       case 'script': return <AppsScriptExporter />;
+      case 'settings': return <Settings />;
       default: return <Dashboard />;
     }
   };

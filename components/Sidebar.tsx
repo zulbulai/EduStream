@@ -7,7 +7,7 @@ import {
   CheckSquare, 
   Wallet, 
   GraduationCap, 
-  Settings, 
+  Settings as SettingsIcon, 
   Cpu, 
   FileCode,
   School,
@@ -66,9 +66,14 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpen, togg
       </nav>
 
       <div className="p-4 border-t border-indigo-800">
-        <button className="flex items-center gap-4 px-4 py-3 w-full hover:bg-indigo-800 rounded-xl transition-colors">
-          <Settings size={22} className="text-indigo-300" />
-          {isOpen && <span className="font-medium text-indigo-200">System Settings</span>}
+        <button 
+          onClick={() => setActiveTab('settings')}
+          className={`flex items-center gap-4 px-4 py-3 w-full rounded-xl transition-all duration-200 ${
+            activeTab === 'settings' ? 'bg-indigo-600 text-white' : 'hover:bg-indigo-800 text-indigo-200'
+          }`}
+        >
+          <SettingsIcon size={22} className={activeTab === 'settings' ? 'text-white' : 'text-indigo-300'} />
+          {isOpen && <span className="font-medium">System Settings</span>}
         </button>
       </div>
     </aside>

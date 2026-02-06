@@ -1,119 +1,109 @@
 
 import React, { useState } from 'react';
-import { Copy, FileCode, CheckCircle, Database, ListChecks, LayoutGrid, ShieldCheck, Zap } from 'lucide-react';
+/* Added Database to imports from lucide-react */
+import { Copy, FileCode, CheckCircle, Zap, ExternalLink, HelpCircle, Terminal, Database } from 'lucide-react';
 
 const AppsScriptExporter: React.FC = () => {
   const [copied, setCopied] = useState(false);
 
   const scriptCode = `/**
- * EduStream Pro - Full School ERP Suite (21 Sheets / 9 Modules)
- * Instructions:
- * 1. Open your Google Sheet.
- * 2. Go to Extensions > Apps Script.
- * 3. Paste this entire code.
- * 4. Run the 'setupFullSystem' function.
+ * EDUSTREAM PRO - CLOUD SYNC ENGINE v2.0
+ * Paste this in Google Sheets > Extensions > Apps Script
  */
 
 const DB_SCHEMA = {
-  // MODULE 1: ADMINISTRATION & ADMISSION
-  STUDENT_ADMISSION_MASTER: ['Student_ID', 'Admission_No', 'First_Name', 'Last_Name', 'Class_Current', 'Section', 'Roll_No', 'Gender', 'DOB', 'Blood_Group', 'Father_Name', 'Mother_Name', 'Father_Mobile', 'Mother_Mobile', 'Student_Email', 'Address_Line1', 'Address_Line2', 'Category', 'RTE_Student', 'Disability', 'Status', 'Photo_URL', 'Aadhar_No', 'Admission_Date'],
-  STUDENT_DOCUMENTS: ['Doc_ID', 'Student_ID', 'Doc_Type', 'Doc_Link', 'Submission_Date', 'Verification_Status'],
-  
-  // MODULE 2: HR & PAYROLL
-  STAFF_MASTER: ['Staff_ID', 'Full_Name', 'Role', 'Designation', 'Qualification', 'Date_Of_Joining', 'Mobile_No', 'Email_ID', 'Address', 'Bank_Name', 'Account_Number', 'IFSC_Code', 'PAN_Number', 'Basic_Salary', 'Status'],
-  PAYROLL_GENERATION: ['Transaction_ID', 'Month_Year', 'Staff_ID', 'Total_Working_Days', 'Days_Present', 'Leaves_Taken', 'Basic_Pay', 'HRA_Allowance', 'Bonus', 'PF_Deduction', 'TDS_Tax', 'Advance_Taken', 'Net_Payable', 'Payment_Date', 'Payment_Mode'],
-  LEAVE_MANAGEMENT: ['Leave_ID', 'Applicant_ID', 'Applicant_Type', 'Leave_Type', 'From_Date', 'To_Date', 'Reason', 'Approval_Status', 'Approved_By'],
-
-  // MODULE 3: ACADEMICS
-  CLASS_SUBJECT_MAPPING: ['Mapping_ID', 'Class_Name', 'Section', 'Subject_Name', 'Teacher_Assigned_ID', 'Book_Name_Ref'],
-  TIME_TABLE_MASTER: ['TimeTable_ID', 'Day', 'Class_Section', 'Period_No', 'Start_Time', 'End_Time', 'Subject', 'Teacher_ID', 'Room_No'],
-  SYLLABUS_TRACKER: ['Tracker_ID', 'Class_Section', 'Subject', 'Chapter_No', 'Chapter_Name', 'Total_Topics', 'Topics_Completed', 'Expected_Completion_Date', 'Actual_Completion_Date', 'Status', 'Teacher_Remark'],
-  HOMEWORK_DIARY: ['HW_ID', 'Date', 'Class_Section', 'Subject', 'Title', 'Description', 'Attachment_Link', 'Submission_Due_Date', 'Posted_By_Teacher_ID'],
-
-  // MODULE 4: LIBRARY
-  LIBRARY_BOOKS_MASTER: ['Accession_No', 'ISBN', 'Book_Title', 'Author', 'Publisher', 'Category', 'Language', 'Price', 'Purchase_Date', 'Rack_Location', 'Current_Status'],
-  LIBRARY_CIRCULATION: ['Issue_ID', 'Book_Accession_No', 'User_Type', 'User_ID', 'Issue_Date', 'Due_Date', 'Return_Date', 'Fine_Amount', 'Status'],
-
-  // MODULE 5: INVENTORY
-  INVENTORY_ITEMS: ['Item_ID', 'Item_Name', 'Category', 'Vendor_Details', 'Unit_Price', 'Total_Quantity_Purchased', 'Current_Quantity_Available', 'Reorder_Level'],
-  INVENTORY_ISSUANCE: ['Issue_ID', 'Date', 'Item_ID', 'Quantity', 'Issued_To_Staff_ID', 'Purpose', 'Authorized_By_Admin'],
-
-  // MODULE 6: TRANSPORT
-  TRANSPORT_VEHICLES: ['Bus_No', 'Driver_Name', 'Driver_Phone', 'Cleaner_Name', 'Capacity', 'Insurance_Expiry', 'Pollution_Expiry', 'GPS_Tracking_Link'],
-  TRANSPORT_ROUTES: ['Route_ID', 'Bus_No_Link', 'Stop_Name', 'Pickup_Time', 'Drop_Time', 'Transport_Fee_Monthly'],
-  TRANSPORT_ALLOCATION: ['Allocation_ID', 'Student_ID', 'Route_ID', 'Stop_Name', 'Start_Date', 'End_Date'],
-
-  // MODULE 7: FRONT OFFICE
-  VISITOR_LOG: ['Visitor_ID', 'Date', 'In_Time', 'Out_Time', 'Visitor_Name', 'Phone_No', 'Purpose', 'Whom_To_Meet', 'Gate_Pass_Issued'],
-  ADMISSION_ENQUIRY: ['Enquiry_ID', 'Date', 'Parent_Name', 'Child_Name', 'Class_Applied', 'Phone', 'Source', 'Status', 'Follow_Up_Date', 'Staff_Handling_Enquiry'],
-
-  // MODULE 8: EXAM & CERTIFICATES
-  EXAM_MASTER: ['Exam_ID', 'Exam_Name', 'Start_Date', 'End_Date', 'Is_Result_Published'],
-  CERTIFICATE_LOG: ['Cert_Issue_ID', 'Certificate_Type', 'Student_ID', 'Issue_Date', 'Reason', 'Generated_Doc_Link'],
-
-  // MODULE 9: SYSTEM CONFIG
-  APP_CONFIG: ['Config_Key', 'Config_Value']
+  STUDENT_ADMISSION_MASTER: ['Student_ID', 'Admission_No', 'First_Name', 'Last_Name', 'Class', 'Status', 'Admission_Date', 'Father_Name', 'Father_Mobile'],
+  FEE_TRANSACTIONS: ['TXN_ID', 'Date', 'Student_Name', 'Class', 'Month', 'Amount', 'Mode', 'Collected_By'],
+  STAFF_MASTER: ['Staff_ID', 'Full_Name', 'Role', 'Email', 'Mobile', 'Salary', 'Joining_Date'],
+  ATTENDANCE_LOG: ['Date', 'Class', 'Student_ID', 'Status', 'Marked_By']
 };
 
 /**
- * CORE SETUP: Creates all 21 Sheets and populates columns
+ * SETUP MENU
  */
-function setupFullSystem() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const ui = SpreadsheetApp.getUi();
-  
-  Object.keys(DB_SCHEMA).forEach(sheetName => {
-    let sheet = ss.getSheetByName(sheetName);
-    if (!sheet) {
-      sheet = ss.insertSheet(sheetName);
-    }
-    
-    // Clear and set headers
-    sheet.clear();
-    const headers = DB_SCHEMA[sheetName];
-    sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
-    
-    // Professional Styling
-    sheet.getRange(1, 1, 1, headers.length)
-         .setBackground('#1e293b')
-         .setFontColor('#f8fafc')
-         .setFontWeight('bold')
-         .setVerticalAlignment('middle')
-         .setHorizontalAlignment('center');
-    
-    sheet.setFrozenRows(1);
-    sheet.autoResizeColumns(1, headers.length);
-  });
-  
-  ui.alert('🚀 Full 21-Sheet ERP Database Setup Complete!\\nModules: Administration, HR, Academics, Library, Inventory, Transport, Front Office, Exams, System Config.');
-}
-
 function onOpen() {
   SpreadsheetApp.getUi()
     .createMenu('🏫 EduStream ERP')
-    .addItem('Initialize All 21 Sheets', 'setupFullSystem')
+    .addItem('🚀 Setup All Sheets (One-Click)', 'setupFullSystem')
     .addSeparator()
-    .addItem('Sync All Modules', 'syncModules')
+    .addItem('ℹ️ Check Connection', 'checkConnection')
     .addToUi();
 }
 
-/** 
- * AUTOMATION FLOWS (Placeholders for triggers)
+/**
+ * RECEIVE DATA FROM APP (POST)
  */
-function syncModules() {
-  // Logic to link Transport to Fees, etc.
-  Logger.log('Syncing modules...');
+function doPost(e) {
+  try {
+    const payload = JSON.parse(e.postData.contents);
+    
+    // Sync Students
+    if (payload.students) syncEntity('STUDENT_ADMISSION_MASTER', payload.students, (s) => [
+      s.id, s.admissionNo, s.firstName, s.lastName, s.admissionClass, s.status, s.admissionDate, s.fatherName, s.fatherMobile
+    ]);
+
+    // Sync Fees
+    if (payload.fees) syncEntity('FEE_TRANSACTIONS', payload.fees, (f) => [
+      f.id, f.date, f.studentName, f.class, f.month, f.amount, f.mode, f.collectedBy
+    ]);
+
+    // Sync Staff
+    if (payload.staff) syncEntity('STAFF_MASTER', payload.staff, (m) => [
+      m.id, m.name, m.role, m.email, m.mobile, m.salary, m.joiningDate
+    ]);
+
+    // Sync Attendance
+    if (payload.attendance) syncEntity('ATTENDANCE_LOG', payload.attendance, (a) => [
+      a.date, a.classSection, a.studentId, a.status, a.markedBy
+    ]);
+
+    return ContentService.createTextOutput(JSON.stringify({status: 'success', message: 'Data Synced Successfully'})).setMimeType(ContentService.MimeType.JSON);
+  } catch (err) {
+    return ContentService.createTextOutput(JSON.stringify({status: 'error', message: err.toString()})).setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+/**
+ * SIMPLE VERIFICATION (GET)
+ */
+function doGet() {
+  return ContentService.createTextOutput("EduStream Cloud Sync is ACTIVE! Please use POST method to sync data.").setMimeType(ContentService.MimeType.TEXT);
+}
+
+function syncEntity(sheetName, dataArray, mapFn) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sheet = ss.getSheetByName(sheetName);
+  if (!sheet) {
+    sheet = ss.insertSheet(sheetName);
+    sheet.appendRow(DB_SCHEMA[sheetName]);
+  }
+  
+  sheet.clear();
+  sheet.appendRow(DB_SCHEMA[sheetName]);
+  
+  const rows = dataArray.map(mapFn);
+  if (rows.length > 0) {
+    sheet.getRange(2, 1, rows.length, DB_SCHEMA[sheetName].length).setValues(rows);
+  }
+  
+  // Formatting
+  sheet.getRange(1, 1, 1, DB_SCHEMA[sheetName].length).setBackground('#1e293b').setFontColor('#ffffff').setFontWeight('bold');
+  sheet.setFrozenRows(1);
+}
+
+function setupFullSystem() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  Object.keys(DB_SCHEMA).forEach(name => {
+    if (!ss.getSheetByName(name)) ss.insertSheet(name);
+    syncEntity(name, [], () => []);
+  });
+  SpreadsheetApp.getUi().alert('✅ School ERP Database Initialized! Sheets created for Students, Fees, Staff, and Attendance.');
+}
+
+function checkConnection() {
+  SpreadsheetApp.getUi().alert('📡 Connection Status: ONLINE\\nServer is ready to receive data.');
 }
 `;
-
-  const modulesList = [
-    { title: 'Admin & Admission', sheets: ['STUDENT_ADMISSION_MASTER', 'STUDENT_DOCUMENTS'] },
-    { title: 'HR & Payroll', sheets: ['STAFF_MASTER', 'PAYROLL_GENERATION', 'LEAVE_MGMT'] },
-    { title: 'Academics', sheets: ['TIME_TABLE', 'SYLLABUS_TRACKER', 'HOMEWORK'] },
-    { title: 'Library & Inventory', sheets: ['BOOKS_MASTER', 'CIRCULATION', 'INVENTORY'] },
-    { title: 'Transport & Office', sheets: ['VEHICLES', 'ROUTES', 'VISITOR_LOG'] },
-    { title: 'Exam & System', sheets: ['EXAM_MASTER', 'CERTIFICATES', 'APP_CONFIG'] }
-  ];
 
   const handleCopy = () => {
     navigator.clipboard.writeText(scriptCode);
@@ -122,93 +112,104 @@ function syncModules() {
   };
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8 pb-16">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-3xl font-black text-slate-900 tracking-tight">Enterprise ERP Exporter</h2>
-          <p className="text-slate-500 font-medium">Full integration for 21 Google Sheets across 9 Core Modules.</p>
+    <div className="max-w-6xl mx-auto space-y-8 pb-16 animate-in fade-in duration-700">
+      <div className="bg-white p-8 rounded-[3rem] border border-slate-100 shadow-xl flex flex-col md:flex-row items-center justify-between gap-6">
+        <div className="flex items-center gap-6">
+          <div className="w-16 h-16 bg-indigo-50 rounded-3xl flex items-center justify-center text-indigo-600 border border-indigo-100 shadow-inner">
+            <Database size={32} />
+          </div>
+          <div>
+            <h2 className="text-3xl font-black text-slate-900 tracking-tight">Cloud Connect Tool</h2>
+            <p className="text-slate-500 font-medium">Link this app to your Google Sheets in <span className="text-indigo-600 font-bold">3 minutes</span>.</p>
+          </div>
         </div>
-        <div className="flex gap-3">
-          <button 
+        <div className="flex gap-4">
+           <a 
+            href="https://sheets.new" 
+            target="_blank" 
+            className="px-6 py-3.5 bg-slate-100 text-slate-700 rounded-2xl font-black text-xs uppercase tracking-widest flex items-center gap-2 hover:bg-slate-200 transition-all shadow-sm"
+           >
+             <ExternalLink size={16} /> 1. Create New Sheet
+           </a>
+           <button 
             onClick={handleCopy}
-            className={`px-6 py-3 rounded-2xl font-bold text-sm flex items-center gap-2 transition-all shadow-xl ${
-              copied ? 'bg-emerald-500 text-white' : 'bg-indigo-600 text-white hover:bg-indigo-700'
+            className={`px-8 py-3.5 rounded-2xl font-black text-xs uppercase tracking-widest flex items-center gap-2 transition-all shadow-xl ${
+              copied ? 'bg-emerald-500 text-white' : 'bg-indigo-600 text-white hover:bg-indigo-700 hover:-translate-y-1'
             }`}
-          >
+           >
             {copied ? <CheckCircle size={18} /> : <FileCode size={18} />}
-            {copied ? 'Code Copied!' : 'Copy ERP Script'}
-          </button>
+            {copied ? 'Script Copied!' : '2. Copy Apps Script'}
+           </button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-        <div className="lg:col-span-1 space-y-6">
-          <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-xl">
-             <h3 className="font-bold text-slate-800 mb-6 flex items-center gap-2">
-                <LayoutGrid size={20} className="text-indigo-600" />
-                System Modules
-             </h3>
-             <div className="space-y-4">
-                {modulesList.map((m, i) => (
-                  <div key={i} className="group cursor-default">
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 group-hover:text-indigo-600 transition-colors">{m.title}</p>
-                    <div className="flex flex-wrap gap-1">
-                      {m.sheets.map(s => (
-                        <span key={s} className="px-2 py-0.5 bg-slate-50 border border-slate-100 rounded text-[9px] font-bold text-slate-600">{s}</span>
-                      ))}
-                    </div>
-                  </div>
-                ))}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="space-y-6">
+          <div className="bg-indigo-900 rounded-[2.5rem] p-8 text-white relative overflow-hidden shadow-2xl">
+             <div className="absolute top-0 right-0 p-10 opacity-10">
+               <HelpCircle size={120} />
              </div>
+             <h3 className="text-xl font-black mb-6 flex items-center gap-2">
+                <Zap size={20} className="text-amber-400" />
+                Quick Steps
+             </h3>
+             <ul className="space-y-6 relative z-10">
+                <li className="flex gap-4">
+                  <span className="w-8 h-8 rounded-full bg-indigo-500 flex items-center justify-center text-xs font-black shrink-0 border border-indigo-400">1</span>
+                  <p className="text-sm font-medium leading-relaxed">
+                    ऊपर वाले बटन से <span className="font-black text-white underline">New Sheet</span> खोलें।
+                  </p>
+                </li>
+                <li className="flex gap-4">
+                  <span className="w-8 h-8 rounded-full bg-indigo-500 flex items-center justify-center text-xs font-black shrink-0 border border-indigo-400">2</span>
+                  <p className="text-sm font-medium leading-relaxed">
+                    <span className="font-black text-white">Extensions &gt; Apps Script</span> में कोड पेस्ट करें और <span className="font-black text-white">Save</span> करें।
+                  </p>
+                </li>
+                <li className="flex gap-4">
+                  <span className="w-8 h-8 rounded-full bg-indigo-500 flex items-center justify-center text-xs font-black shrink-0 border border-indigo-400">3</span>
+                  <p className="text-sm font-medium leading-relaxed">
+                    <span className="font-black text-white">Deploy &gt; New Deployment</span> करें और <span className="font-black text-white">Web App</span> चुनें।
+                  </p>
+                </li>
+                <li className="flex gap-4">
+                  <span className="w-8 h-8 rounded-full bg-indigo-500 flex items-center justify-center text-xs font-black shrink-0 border border-indigo-400">4</span>
+                  <p className="text-sm font-medium leading-relaxed">
+                    URL को कॉपी करके <span className="font-black text-white underline italic">System Settings</span> पेज में डाल दें।
+                  </p>
+                </li>
+             </ul>
           </div>
 
-          <div className="bg-slate-900 p-6 rounded-3xl text-white shadow-xl">
-            <h4 className="font-bold mb-4 flex items-center gap-2">
-              <ShieldCheck size={18} className="text-emerald-400" />
-              ERP Core Logic
-            </h4>
-            <div className="space-y-4">
-              <div className="flex gap-3">
-                <Zap size={14} className="text-amber-400 flex-shrink-0 mt-1" />
-                <p className="text-[10px] text-slate-400 leading-relaxed">
-                  <span className="text-white font-bold">Auto-Validation:</span> Library checks for dues before TC generation is triggered.
-                </p>
-              </div>
-              <div className="flex gap-3">
-                <Zap size={14} className="text-amber-400 flex-shrink-0 mt-1" />
-                <p className="text-[10px] text-slate-400 leading-relaxed">
-                  <span className="text-white font-bold">Fee Linkage:</span> Transport allocation automatically updates monthly fee ledger.
-                </p>
-              </div>
-            </div>
+          <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm">
+             <h4 className="font-black text-slate-800 mb-4 flex items-center gap-2 uppercase tracking-widest text-xs">
+               <Terminal size={14} className="text-indigo-600" />
+               Auto-Sync Ready
+             </h4>
+             <p className="text-xs text-slate-500 font-medium leading-relaxed">
+               एक बार लिंक होने के बाद, आप Dashboard से "Sync Now" बटन दबाकर सारा डेटा अपनी Sheet में भेज सकते हैं।
+             </p>
           </div>
         </div>
 
-        <div className="lg:col-span-3">
-          <div className="bg-slate-950 rounded-[2.5rem] border border-slate-800 shadow-2xl overflow-hidden flex flex-col h-full ring-8 ring-slate-900/50">
-            <div className="p-5 bg-slate-900/50 border-b border-slate-800 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="flex gap-1.5">
-                  <div className="w-3 h-3 rounded-full bg-rose-500/20 border border-rose-500/50"></div>
-                  <div className="w-3 h-3 rounded-full bg-amber-500/20 border border-amber-500/50"></div>
-                  <div className="w-3 h-3 rounded-full bg-emerald-500/20 border border-emerald-500/50"></div>
+        <div className="lg:col-span-2">
+           <div className="bg-slate-950 rounded-[3rem] shadow-2xl overflow-hidden flex flex-col ring-8 ring-slate-900/50">
+             <div className="p-6 bg-slate-900 border-b border-slate-800 flex items-center justify-between">
+                <div className="flex gap-2">
+                  <div className="w-3 h-3 rounded-full bg-rose-500"></div>
+                  <div className="w-3 h-3 rounded-full bg-amber-500"></div>
+                  <div className="w-3 h-3 rounded-full bg-emerald-500"></div>
                 </div>
-                <span className="text-[10px] font-mono font-bold text-slate-500 uppercase tracking-widest ml-4">Full_School_ERP_System.gs</span>
-              </div>
-              <div className="px-3 py-1 bg-indigo-500/10 border border-indigo-500/20 rounded-full">
-                <span className="text-[9px] font-bold text-indigo-400 uppercase tracking-widest">Version 2026.1.0</span>
-              </div>
-            </div>
-            <div className="p-8 overflow-auto custom-scrollbar flex-1 font-mono text-xs leading-relaxed text-indigo-300">
-              <pre className="whitespace-pre">
-                {scriptCode}
-              </pre>
-            </div>
-            <div className="p-4 bg-indigo-600/10 border-t border-slate-800 flex items-center justify-center gap-4">
-               <Database size={16} className="text-indigo-400" />
-               <p className="text-[10px] font-bold text-indigo-300 uppercase tracking-widest">System ready for Google Apps Script Engine Deployment</p>
-            </div>
-          </div>
+                <div className="px-4 py-1 bg-slate-800 rounded-full text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                  GoogleSyncEngine.js
+                </div>
+             </div>
+             <div className="p-10 overflow-auto custom-scrollbar font-mono text-[10px] leading-relaxed text-indigo-200/80 bg-slate-950 h-[500px]">
+                <pre className="whitespace-pre">
+                  {scriptCode}
+                </pre>
+             </div>
+           </div>
         </div>
       </div>
     </div>
