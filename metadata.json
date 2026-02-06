@@ -1,0 +1,7 @@
+{
+  "name": "EduStream Pro - School Management System",
+  "description": "A comprehensive school management platform featuring advanced student admission, automated attendance tracking, fee management, and academic performance analytics powered by Gemini AI.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
