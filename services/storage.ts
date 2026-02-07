@@ -13,12 +13,30 @@ const KEYS = {
   SCHEDULE: 'edustream_schedule'
 };
 
-export const StorageService = {
-  // Utility for LocalStorage
-  getItem: (key: string) => JSON.parse(localStorage.getItem(key) || '[]'),
-  setItem: (key: string, data: any) => localStorage.setItem(key, JSON.stringify(data)),
+// Custom event to notify components when data changes
+const STORAGE_EVENT = 'edustream_data_updated';
 
-  // Student Methods
+export const StorageService = {
+  // Event system
+  notifyUpdate: () => window.dispatchEvent(new CustomEvent(STORAGE_EVENT)),
+  subscribe: (callback: () => void) => {
+    window.addEventListener(STORAGE_EVENT, callback);
+    return () => window.removeEventListener(STORAGE_EVENT, callback);
+  },
+
+  getItem: (key: string) => {
+    try {
+      return JSON.parse(localStorage.getItem(key) || '[]');
+    } catch (e) {
+      return [];
+    }
+  },
+  
+  setItem: (key: string, data: any) => {
+    localStorage.setItem(key, JSON.stringify(data));
+    StorageService.notifyUpdate();
+  },
+
   getStudents: (): Student[] => StorageService.getItem(KEYS.STUDENTS),
   saveStudent: (student: Student) => {
     const items = StorageService.getStudents();
@@ -32,7 +50,6 @@ export const StorageService = {
     StorageService.autoSync();
   },
 
-  // Staff Methods
   getStaff: (): Staff[] => StorageService.getItem(KEYS.STAFF),
   saveStaff: (member: Staff) => {
     const items = StorageService.getStaff();
@@ -41,13 +58,11 @@ export const StorageService = {
     StorageService.setItem(KEYS.STAFF, items);
     StorageService.autoSync();
   },
-  // Added deleteStaff method to fix property missing error in StaffList.tsx
   deleteStaff: (id: string) => {
     StorageService.setItem(KEYS.STAFF, StorageService.getStaff().filter(s => s.id !== id));
     StorageService.autoSync();
   },
 
-  // Fee Methods
   getFees: (): FeeTransaction[] => StorageService.getItem(KEYS.FEES),
   saveFee: (fee: FeeTransaction) => {
     const items = StorageService.getFees();
@@ -57,7 +72,6 @@ export const StorageService = {
     StorageService.autoSync();
   },
 
-  // Attendance Methods
   getAttendance: (): AttendanceRecord[] => StorageService.getItem(KEYS.ATTENDANCE),
   saveAttendance: (records: AttendanceRecord[]) => {
     const current = StorageService.getAttendance();
@@ -70,23 +84,30 @@ export const StorageService = {
     StorageService.autoSync();
   },
 
-  // Config Methods
   getConfig: (): SystemConfig => {
     const defaults = {
       schoolName: 'EduStream International School',
       appsScriptUrl: '',
       currentSession: '2025-26'
     };
-    const stored = localStorage.getItem(KEYS.CONFIG);
-    return stored ? JSON.parse(stored) : defaults;
+    try {
+      const stored = localStorage.getItem(KEYS.CONFIG);
+      return stored ? JSON.parse(stored) : defaults;
+    } catch (e) {
+      return defaults;
+    }
   },
-  saveConfig: (config: SystemConfig) => localStorage.setItem(KEYS.CONFIG, JSON.stringify(config)),
+  saveConfig: (config: SystemConfig) => StorageService.setItem(KEYS.CONFIG, config),
 
-  // Auth Methods
-  getCurrentUser: (): User | null => JSON.parse(localStorage.getItem(KEYS.AUTH) || 'null'),
+  getCurrentUser: (): User | null => {
+    try {
+      return JSON.parse(localStorage.getItem(KEYS.AUTH) || 'null');
+    } catch (e) {
+      return null;
+    }
+  },
   setCurrentUser: (user: User | null) => localStorage.setItem(KEYS.AUTH, JSON.stringify(user)),
 
-  // Marks & Notifications
   getMarks: (): ExamMark[] => StorageService.getItem(KEYS.MARKS),
   saveMark: (mark: ExamMark) => {
     const items = StorageService.getMarks();
@@ -95,6 +116,7 @@ export const StorageService = {
     StorageService.setItem(KEYS.MARKS, items);
     StorageService.autoSync();
   },
+  
   getNotifications: (): Notification[] => StorageService.getItem(KEYS.NOTIFICATIONS),
   saveNotification: (notif: Notification) => {
     const items = StorageService.getNotifications();
@@ -103,72 +125,64 @@ export const StorageService = {
     StorageService.autoSync();
   },
 
-  // Added Schedule Methods to fix missing property errors in TimeTableManager.tsx
   getSchedule: (): TimeSlot[] => StorageService.getItem(KEYS.SCHEDULE),
   saveSchedule: (schedule: TimeSlot[]) => {
     StorageService.setItem(KEYS.SCHEDULE, schedule);
     StorageService.autoSync();
   },
 
-  /**
-   * REFINED AUTO-SYNC LOGIC
-   * This sends data to whatever backend is configured.
-   */
   autoSync: async () => {
     const config = StorageService.getConfig();
+    if (!config.appsScriptUrl) return;
     
-    // Fallback to Apps Script if available
-    if (config.appsScriptUrl) {
-      const data = {
-        students: StorageService.getStudents(),
-        fees: StorageService.getFees(),
-        staff: StorageService.getStaff(),
-        attendance: StorageService.getAttendance(),
-        marks: StorageService.getMarks(),
-        notifications: StorageService.getNotifications(),
-        // Included schedule in auto-sync data
-        schedule: StorageService.getSchedule()
-      };
-      try {
-        await fetch(config.appsScriptUrl, {
-          method: 'POST',
-          mode: 'no-cors', // Essential for Apps Script
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data)
-        });
-        console.log("Cloud Sync Triggered");
-      } catch (e) { console.error("Sync Error", e); }
+    const data = {
+      students: StorageService.getStudents(),
+      fees: StorageService.getFees(),
+      staff: StorageService.getStaff(),
+      attendance: StorageService.getAttendance(),
+      marks: StorageService.getMarks(),
+      notifications: StorageService.getNotifications(),
+      schedule: StorageService.getSchedule()
+    };
+
+    try {
+      await fetch(config.appsScriptUrl, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+    } catch (e) {
+      console.warn("Background sync paused - check network");
     }
   },
 
-  /**
-   * FORCE PULL FROM CLOUD
-   * Fixes the "Dashboard data not fetching" issue by deep-refreshing local state.
-   */
   syncFromCloud: async (): Promise<boolean> => {
     const config = StorageService.getConfig();
     if (!config.appsScriptUrl) return false;
 
     try {
       const response = await fetch(config.appsScriptUrl);
-      const result = await response.json();
+      if (!response.ok) throw new Error("Network response was not ok");
       
+      const result = await response.json();
       if (result.status === 'success' && result.data) {
         const d = result.data;
-        // Mapping sheet names to our local keys
-        if (d.studentmaster) StorageService.setItem(KEYS.STUDENTS, d.studentmaster);
-        if (d.feeledger) StorageService.setItem(KEYS.FEES, d.feeledger);
-        if (d.staffdirectory) StorageService.setItem(KEYS.STAFF, d.staffdirectory);
-        if (d.attendancelogs) StorageService.setItem(KEYS.ATTENDANCE, d.attendancelogs);
-        if (d.exammarks) StorageService.setItem(KEYS.MARKS, d.exammarks);
-        if (d.notifications) StorageService.setItem(KEYS.NOTIFICATIONS, d.notifications);
-        // Included timetable in sync mapping
-        if (d.timetable) StorageService.setItem(KEYS.SCHEDULE, d.timetable);
+        // Batch updates without triggering individual events
+        if (d.studentmaster) localStorage.setItem(KEYS.STUDENTS, JSON.stringify(d.studentmaster));
+        if (d.feeledger) localStorage.setItem(KEYS.FEES, JSON.stringify(d.feeledger));
+        if (d.staffdirectory) localStorage.setItem(KEYS.STAFF, JSON.stringify(d.staffdirectory));
+        if (d.attendancelogs) localStorage.setItem(KEYS.ATTENDANCE, JSON.stringify(d.attendancelogs));
+        if (d.exammarks) localStorage.setItem(KEYS.MARKS, JSON.stringify(d.exammarks));
+        if (d.notifications) localStorage.setItem(KEYS.NOTIFICATIONS, JSON.stringify(d.notifications));
+        if (d.timetable) localStorage.setItem(KEYS.SCHEDULE, JSON.stringify(d.timetable));
+        
+        StorageService.notifyUpdate(); // Trigger one global refresh
         return true;
       }
       return false;
     } catch (err) {
-      console.error("Critical: Cloud Fetch Failed", err);
+      console.error("Cloud Fetch Error:", err);
       return false;
     }
   }

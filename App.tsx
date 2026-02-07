@@ -28,20 +28,19 @@ const App: React.FC = () => {
 
   useEffect(() => {
     const initApp = async () => {
-      const user = StorageService.getCurrentUser();
-      if (user) {
-        setCurrentUser(user);
-        // Automatic sync on load if logged in
-        setIsSyncing(true);
-        try {
-          await StorageService.syncFromCloud();
-        } catch (e) {
-          console.error("Initial Sync Failed", e);
-        } finally {
-          setIsSyncing(false);
+      try {
+        const user = StorageService.getCurrentUser();
+        if (user) {
+          setCurrentUser(user);
+          // Initial background sync
+          setIsSyncing(true);
+          StorageService.syncFromCloud().finally(() => setIsSyncing(false));
         }
+      } catch (e) {
+        console.error("Initialization Error:", e);
+      } finally {
+        setIsInitialized(true);
       }
-      setIsInitialized(true);
     };
 
     initApp();
@@ -71,6 +70,7 @@ const App: React.FC = () => {
        switch(activeTab) {
           case 'dashboard': return <StudentPortal studentId={currentUser.linkedId!} />;
           case 'timetable': return <TimeTableManager />;
+          case 'settings': return <Settings />;
           default: return <StudentPortal studentId={currentUser.linkedId!} />;
        }
     }
@@ -81,6 +81,7 @@ const App: React.FC = () => {
           case 'attendance': return <AttendanceSystem />;
           case 'marks': return <ExamManager />;
           case 'timetable': return <TimeTableManager />;
+          case 'settings': return <Settings />;
           default: return <TeacherPortal staffId={currentUser.linkedId!} />;
        }
     }
@@ -106,7 +107,7 @@ const App: React.FC = () => {
       {isSyncing && (
         <div className="fixed top-4 right-4 z-[999] bg-indigo-600 text-white px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest shadow-2xl flex items-center gap-2 animate-bounce">
           <div className="w-2 h-2 bg-white rounded-full animate-ping"></div>
-          Syncing Cloud Data...
+          Cloud Update In Progress...
         </div>
       )}
       <Sidebar 

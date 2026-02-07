@@ -1,17 +1,26 @@
 
-import React, { useMemo, useState } from 'react';
-import { Users, UserCheck, UserMinus, DollarSign, Calendar, AlertCircle, ArrowUpRight, Clock, GraduationCap, CheckCircle2, XCircle, ShieldCheck, RefreshCw, Loader2 } from 'lucide-react';
+import React, { useMemo, useState, useEffect } from 'react';
+import { Users, UserCheck, DollarSign, AlertCircle, Clock, CheckCircle2, RefreshCw, Loader2, ShieldCheck } from 'lucide-react';
 import { StorageService } from '../services/storage';
 
 const Dashboard: React.FC = () => {
   const [syncing, setSyncing] = useState(false);
-  const students = StorageService.getStudents();
-  const fees = StorageService.getFees();
-  const attendance = StorageService.getAttendance();
-  const staff = StorageService.getStaff();
+  const [dataVersion, setDataVersion] = useState(0);
+
+  // Subscribe to storage updates
+  useEffect(() => {
+    const unsubscribe = StorageService.subscribe(() => {
+      setDataVersion(v => v + 1);
+    });
+    return unsubscribe;
+  }, []);
+
+  const students = useMemo(() => StorageService.getStudents(), [dataVersion]);
+  const fees = useMemo(() => StorageService.getFees(), [dataVersion]);
+  const attendance = useMemo(() => StorageService.getAttendance(), [dataVersion]);
   
-  const pendingApprovals = fees.filter(f => f.status === 'Pending');
-  const verifiedFees = fees.filter(f => f.status === 'Verified');
+  const pendingApprovals = useMemo(() => fees.filter(f => f.status === 'Pending'), [fees]);
+  const verifiedFees = useMemo(() => fees.filter(f => f.status === 'Verified'), [fees]);
 
   const stats = useMemo(() => {
     const totalStudents = students.length;
@@ -26,24 +35,20 @@ const Dashboard: React.FC = () => {
       { label: 'Verified Revenue', value: `₹${(totalVerifiedRevenue / 1000).toFixed(1)}K`, icon: DollarSign, color: 'bg-indigo-600', trend: 'Bank-settled payments' },
       { label: 'Pending Approval', value: pendingApprovals.length.toString(), icon: AlertCircle, color: 'bg-amber-500', trend: 'Requires Review' },
     ];
-  }, [students, fees, attendance, verifiedFees, pendingApprovals]);
+  }, [students, attendance, verifiedFees, pendingApprovals]);
 
   const handleApprove = async (id: string) => {
     const txn = fees.find(f => f.id === id);
     if (txn) {
       txn.status = 'Verified';
       StorageService.saveFee(txn);
-      alert("Payment Authorized & Synced.");
-      window.location.reload(); // Hard refresh to ensure storage is clean
     }
   };
 
   const handleManualSync = async () => {
     setSyncing(true);
-    const success = await StorageService.syncFromCloud();
+    await StorageService.syncFromCloud();
     setSyncing(false);
-    if (success) window.location.reload();
-    else alert("Sync failed. Check Cloud URL in Settings.");
   };
 
   return (
