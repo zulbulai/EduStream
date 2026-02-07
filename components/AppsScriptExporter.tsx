@@ -6,8 +6,13 @@ const AppsScriptExporter: React.FC = () => {
   const [copied, setCopied] = useState(false);
 
   const scriptCode = `/**
- * EDUSTREAM PRO - CLOUD ENGINE v12.1 (DEEP-SYNC FIX + TIMETABLE)
+ * EDUSTREAM PRO - CLOUD ENGINE v12.2 (UI CONTEXT FIX)
  * This script serves as the backend database for your school management system.
+ * 
+ * SETUP INSTRUCTIONS:
+ * 1. Click "Run" -> "initializeEnterpriseSheets" in the Editor.
+ * 2. If you see "getUi" error, ignore it; the sheets are created anyway.
+ * 3. Refresh your Google Sheet to see the new "EduStream ERP" menu.
  */
 
 const DB_CONFIG = {
@@ -42,10 +47,13 @@ const DB_CONFIG = {
 };
 
 function onOpen() {
-  SpreadsheetApp.getUi().createMenu('🏫 EduStream ERP v12.1')
-    .addItem('🚀 Initial Database Setup', 'initializeEnterpriseSheets')
-    .addItem('🧹 Clean Duplicate IDs', 'cleanDuplicates')
-    .addToUi();
+  try {
+    SpreadsheetApp.getUi().createMenu('🏫 EduStream ERP v12.2')
+      .addItem('🚀 Initial Database Setup', 'initializeEnterpriseSheets')
+      .addToUi();
+  } catch (e) {
+    Logger.log("UI menu could not be created (running in background)");
+  }
 }
 
 function doGet() {
@@ -107,7 +115,13 @@ function syncData(key, data, mapFn) {
 
 function initializeEnterpriseSheets() {
   Object.keys(DB_CONFIG).forEach(key => syncData(key, [], () => []));
-  SpreadsheetApp.getUi().alert('✅ EduStream v12.1 Enterprise DB Ready!');
+  
+  // Safe alert check
+  try {
+    SpreadsheetApp.getUi().alert('✅ EduStream v12.2 Enterprise DB Ready! Refresh your Google Sheet to see the new menu.');
+  } catch (e) {
+    Logger.log('✅ EduStream v12.2 Enterprise DB Ready! (Check your Sheet tabs)');
+  }
 }
 `;
 
@@ -122,28 +136,28 @@ function initializeEnterpriseSheets() {
       <div className="bg-white p-8 rounded-[3.5rem] border border-slate-100 shadow-xl flex flex-col md:flex-row items-center justify-between gap-6 ring-1 ring-slate-100">
         <div className="flex items-center gap-6">
           <div className="w-20 h-20 bg-indigo-600 rounded-[2.5rem] flex items-center justify-center text-white shadow-2xl shadow-indigo-200"><Database size={40} /></div>
-          <div><h2 className="text-3xl font-black text-slate-900 tracking-tight">Portal Sync Engine</h2><p className="text-indigo-600 font-bold tracking-tight text-sm uppercase">Version 12.1 Enterprise Build</p></div>
+          <div><h2 className="text-3xl font-black text-slate-900 tracking-tight">Portal Sync Engine</h2><p className="text-indigo-600 font-bold tracking-tight text-sm uppercase">Version 12.2 (Fix)</p></div>
         </div>
         <button onClick={handleCopy} className={`px-10 py-5 rounded-[2rem] font-black text-xs uppercase tracking-widest flex items-center gap-2 transition-all shadow-2xl active:scale-95 ${copied ? 'bg-emerald-500 text-white' : 'bg-slate-900 text-white hover:bg-indigo-600'}`}>
-          {copied ? <CheckCircle size={20} /> : <FileCode size={20} />}{copied ? 'Code Copied!' : 'Copy v12.1 Source Code'}
+          {copied ? <CheckCircle size={20} /> : <FileCode size={20} />}{copied ? 'Code Copied!' : 'Copy Fix Code'}
         </button>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="bg-indigo-900 rounded-[3rem] p-10 text-white relative overflow-hidden h-fit shadow-2xl">
              <div className="absolute top-0 right-0 p-10 opacity-10"><Zap size={150} /></div>
-             <h3 className="text-2xl font-black mb-8 text-indigo-200">Critical: Deep-Sync Fix</h3>
+             <h3 className="text-2xl font-black mb-8 text-indigo-200">How to fix the Error?</h3>
              <div className="space-y-6">
-                <p className="text-sm font-bold">1. Replace your existing Google Apps Script with this new version.</p>
-                <p className="text-sm font-bold">2. Re-deploy as Web App (Execute as: Me, Access: Anyone).</p>
-                <p className="text-sm font-bold">3. Run the "Initial Database Setup" from the new menu in Google Sheets.</p>
-                <p className="text-sm font-bold">4. Dashboard will now auto-fetch all sheet data on every load.</p>
+                <p className="text-sm font-bold">1. Copy this NEW code.</p>
+                <p className="text-sm font-bold">2. Paste it in your Apps Script Editor (delete the old one).</p>
+                <p className="text-sm font-bold">3. Save (Ctrl+S) and then Deploy as Web App again.</p>
+                <p className="text-sm font-bold">4. Go back to your Google Sheet tab and REFRESH it. You will see an "EduStream ERP" menu at the top next to "Help". Run it from there!</p>
              </div>
         </div>
         <div className="lg:col-span-2 bg-slate-950 rounded-[3rem] overflow-hidden flex flex-col h-[600px] border border-slate-800 shadow-2xl">
              <div className="p-6 bg-slate-900 border-b border-slate-800 flex items-center justify-between">
                 <div className="flex gap-2"><div className="w-3 h-3 rounded-full bg-rose-500"></div><div className="w-3 h-3 rounded-full bg-amber-500"></div><div className="w-3 h-3 rounded-full bg-emerald-500"></div></div>
-                <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">engine_v12.gs</span>
+                <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">engine_v12.2.gs</span>
              </div>
              <div className="p-10 overflow-auto font-mono text-[11px] text-indigo-100/80 bg-slate-950 leading-relaxed custom-scrollbar">
                 <pre>{scriptCode}</pre>
