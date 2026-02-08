@@ -16,6 +16,7 @@ import TimeTableManager from './components/TimeTableManager';
 import StudentPortal from './components/StudentPortal';
 import TeacherPortal from './components/TeacherPortal';
 import ExamManager from './components/ExamManager';
+import NotificationManager from './components/NotificationManager';
 import { UserRole, User } from './types';
 import { StorageService } from './services/storage';
 
@@ -32,7 +33,6 @@ const App: React.FC = () => {
         const user = StorageService.getCurrentUser();
         if (user) {
           setCurrentUser(user);
-          // Initial background sync
           setIsSyncing(true);
           StorageService.syncFromCloud().finally(() => setIsSyncing(false));
         }
@@ -79,6 +79,7 @@ const App: React.FC = () => {
        switch(activeTab) {
           case 'dashboard': return <TeacherPortal staffId={currentUser.linkedId!} />;
           case 'attendance': return <AttendanceSystem />;
+          case 'notifications': return <NotificationManager />;
           case 'marks': return <ExamManager />;
           case 'timetable': return <TimeTableManager />;
           case 'settings': return <Settings />;
@@ -91,6 +92,7 @@ const App: React.FC = () => {
       case 'admission': return <AdmissionForm />;
       case 'students': return <StudentList />;
       case 'attendance': return <AttendanceSystem />;
+      case 'notifications': return <NotificationManager />;
       case 'fees': return <FeeManagement currentUser={currentUser} />;
       case 'staff': return <StaffList />;
       case 'timetable': return <TimeTableManager />;
@@ -103,11 +105,11 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="flex h-screen bg-slate-50 overflow-hidden">
+    <div className="flex h-screen bg-slate-50 overflow-hidden font-sans">
       {isSyncing && (
-        <div className="fixed top-4 right-4 z-[999] bg-indigo-600 text-white px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest shadow-2xl flex items-center gap-2 animate-bounce">
+        <div className="fixed bottom-10 right-10 z-[999] bg-indigo-600 text-white px-8 py-4 rounded-full text-[10px] font-black uppercase tracking-[0.2em] shadow-2xl flex items-center gap-3 animate-bounce">
           <div className="w-2 h-2 bg-white rounded-full animate-ping"></div>
-          Cloud Update In Progress...
+          Cloud Engine: Syncing...
         </div>
       )}
       <Sidebar 
@@ -125,7 +127,7 @@ const App: React.FC = () => {
           onLogout={handleLogout}
         />
         
-        <main className="flex-1 overflow-y-auto p-4 md:p-8">
+        <main className="flex-1 overflow-y-auto p-4 md:p-12 custom-scrollbar">
           <div className="max-w-7xl mx-auto space-y-6">
             {renderContent()}
           </div>

@@ -29,6 +29,7 @@ export interface ExamMark {
 export interface Notification {
   id: string;
   from: string;
+  fromRole: string;
   to: 'ALL' | 'TEACHERS' | 'STUDENTS' | string; 
   title: string;
   message: string;
@@ -121,7 +122,6 @@ export interface SystemConfig {
   currentSession: string;
 }
 
-// Added TimeSlot interface to support TimeTableManager requirements
 export interface TimeSlot {
   id: string;
   classId: string;

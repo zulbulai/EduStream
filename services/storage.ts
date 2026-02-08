@@ -13,11 +13,9 @@ const KEYS = {
   SCHEDULE: 'edustream_schedule'
 };
 
-// Custom event to notify components when data changes
 const STORAGE_EVENT = 'edustream_data_updated';
 
 export const StorageService = {
-  // Event system
   notifyUpdate: () => window.dispatchEvent(new CustomEvent(STORAGE_EVENT)),
   subscribe: (callback: () => void) => {
     window.addEventListener(STORAGE_EVENT, callback);
@@ -26,7 +24,8 @@ export const StorageService = {
 
   getItem: (key: string) => {
     try {
-      return JSON.parse(localStorage.getItem(key) || '[]');
+      const data = localStorage.getItem(key);
+      return data ? JSON.parse(data) : [];
     } catch (e) {
       return [];
     }
@@ -97,11 +96,15 @@ export const StorageService = {
       return defaults;
     }
   },
-  saveConfig: (config: SystemConfig) => StorageService.setItem(KEYS.CONFIG, config),
+  saveConfig: (config: SystemConfig) => {
+    localStorage.setItem(KEYS.CONFIG, JSON.stringify(config));
+    StorageService.notifyUpdate();
+  },
 
   getCurrentUser: (): User | null => {
     try {
-      return JSON.parse(localStorage.getItem(KEYS.AUTH) || 'null');
+      const data = localStorage.getItem(KEYS.AUTH);
+      return data ? JSON.parse(data) : null;
     } catch (e) {
       return null;
     }
@@ -153,7 +156,7 @@ export const StorageService = {
         body: JSON.stringify(data)
       });
     } catch (e) {
-      console.warn("Background sync paused - check network");
+      console.warn("Background sync paused");
     }
   },
 
@@ -163,12 +166,11 @@ export const StorageService = {
 
     try {
       const response = await fetch(config.appsScriptUrl);
-      if (!response.ok) throw new Error("Network response was not ok");
+      if (!response.ok) throw new Error("Cloud Error");
       
       const result = await response.json();
       if (result.status === 'success' && result.data) {
         const d = result.data;
-        // Batch updates without triggering individual events
         if (d.studentmaster) localStorage.setItem(KEYS.STUDENTS, JSON.stringify(d.studentmaster));
         if (d.feeledger) localStorage.setItem(KEYS.FEES, JSON.stringify(d.feeledger));
         if (d.staffdirectory) localStorage.setItem(KEYS.STAFF, JSON.stringify(d.staffdirectory));
@@ -177,12 +179,12 @@ export const StorageService = {
         if (d.notifications) localStorage.setItem(KEYS.NOTIFICATIONS, JSON.stringify(d.notifications));
         if (d.timetable) localStorage.setItem(KEYS.SCHEDULE, JSON.stringify(d.timetable));
         
-        StorageService.notifyUpdate(); // Trigger one global refresh
+        StorageService.notifyUpdate();
         return true;
       }
       return false;
     } catch (err) {
-      console.error("Cloud Fetch Error:", err);
+      console.error("Fetch Error", err);
       return false;
     }
   }

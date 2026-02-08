@@ -33,9 +33,11 @@ const TeacherPortal: React.FC<TeacherPortalProps> = ({ staffId }) => {
 
   const sendNotification = () => {
     if(!notifTitle || !notifMsg) return;
+    // Add missing 'fromRole' property to the Notification object
     const n: Notification = {
       id: `NTF-${Date.now()}`,
       from: member?.name || 'Teacher',
+      fromRole: member?.role || 'Teacher',
       to: member?.assignedClass || 'ALL',
       title: notifTitle,
       message: notifMsg,

@@ -2,7 +2,7 @@
 import React from 'react';
 import { 
   LayoutDashboard, UserPlus, Users, CheckSquare, Wallet, GraduationCap, Settings as SettingsIcon, 
-  Cpu, FileCode, School, ChevronLeft, ChevronRight, CalendarClock, Award, MessageSquare 
+  Cpu, FileCode, School, ChevronLeft, ChevronRight, CalendarClock, Award, Megaphone 
 } from 'lucide-react';
 import { UserRole } from '../types';
 
@@ -26,6 +26,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpen, togg
       return [
         { id: 'dashboard', label: 'Teacher Hub', icon: LayoutDashboard },
         { id: 'attendance', label: 'Take Attendance', icon: CheckSquare },
+        { id: 'notifications', label: 'Notices', icon: Megaphone },
         { id: 'marks', label: 'Exam Grading', icon: Award },
         { id: 'timetable', label: 'Schedule', icon: CalendarClock },
       ];
@@ -36,6 +37,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpen, togg
       { id: 'admission', label: 'Admission', icon: UserPlus },
       { id: 'students', label: 'Students', icon: Users },
       { id: 'attendance', label: 'Attendance', icon: CheckSquare },
+      { id: 'notifications', label: 'Notices', icon: Megaphone },
       { id: 'timetable', label: 'Scheduling', icon: CalendarClock },
       { id: 'marks', label: 'Marks Hub', icon: Award },
       { id: 'fees', label: 'Fees Manager', icon: Wallet },
